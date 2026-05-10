@@ -158,7 +158,7 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/rag/query -Body (@
 } | ConvertTo-Json) -ContentType "application/json"
 ```
 
-当前 RAG 是本地词项 Evidence Index MVP，先保证 `citations` 和 `source_chunks` 稳定，后续再替换为向量库 / BM25 混合检索。
+当前 RAG 是本地 BM25 Evidence Index，先保证 `citations` 和 `source_chunks` 稳定，后续再替换为向量库 / embedding 混合检索。
 
 ## 前端启动
 

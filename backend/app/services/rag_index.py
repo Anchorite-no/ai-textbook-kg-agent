@@ -21,8 +21,10 @@ from app.models.schemas import (
 from app.services.parsed_storage import list_parsed_textbooks, load_parsed_textbook
 
 
-INDEX_VERSION = "local_lexical_v1"
+INDEX_VERSION = "local_bm25_v1"
 INDEX_FILENAME = "rag_index.json"
+BM25_K1 = 1.5
+BM25_B = 0.75
 
 
 def build_rag_index(request: RagIndexRequest, job: JobRecord) -> RagIndexStatus:
@@ -51,6 +53,8 @@ def build_rag_index(request: RagIndexRequest, job: JobRecord) -> RagIndexStatus:
                     "char_count": chunk.char_count,
                 }
             )
+    document_frequencies = _document_frequencies(records)
+    avg_doc_len = _average_doc_length(records)
     payload = {
         "version": INDEX_VERSION,
         "built_by_job_id": job.id,
@@ -58,6 +62,8 @@ def build_rag_index(request: RagIndexRequest, job: JobRecord) -> RagIndexStatus:
         "raw_file_ids": seen_books,
         "textbook_count": len(seen_books),
         "chunk_count": len(records),
+        "document_frequencies": document_frequencies,
+        "avg_doc_len": avg_doc_len,
         "records": records,
     }
     path = _index_path()
@@ -98,7 +104,7 @@ def query_rag_index(request: RagQueryRequest) -> RagQueryResponse:
     scored = [
         (score, record)
         for record in records
-        if (score := _score_record(query_terms, record)) > 0
+        if (score := _score_record(query_terms, record, payload)) > 0
     ]
     scored.sort(key=lambda item: item[0], reverse=True)
     top = scored[: request.top_k]
@@ -140,9 +146,11 @@ def query_rag_index(request: RagQueryRequest) -> RagQueryResponse:
         source_chunks=source_chunks,
         metadata={
             "index_version": payload.get("version"),
-            "retrieval": "local_lexical",
+            "retrieval": "local_bm25",
             "top_k": request.top_k,
             "matched_count": len(top),
+            "textbook_count": payload.get("textbook_count", 0),
+            "chunk_count": payload.get("chunk_count", 0),
         },
     )
 
@@ -168,7 +176,12 @@ def _status_from_payload(payload: dict[str, Any], path: Path) -> RagIndexStatus:
         raw_file_ids=list(payload.get("raw_file_ids") or []),
         index_path=str(path),
         updated_at=updated_at,
-        metadata={"version": payload.get("version"), "built_by_job_id": payload.get("built_by_job_id")},
+        metadata={
+            "version": payload.get("version"),
+            "built_by_job_id": payload.get("built_by_job_id"),
+            "retrieval": "local_bm25",
+            "avg_doc_len": payload.get("avg_doc_len"),
+        },
     )
 
 
@@ -185,13 +198,33 @@ def _token_counts(text: str) -> dict[str, int]:
     return dict(Counter(token for token in tokens if token.strip()))
 
 
-def _score_record(query_terms: dict[str, int], record: dict[str, Any]) -> float:
+def _document_frequencies(records: list[dict[str, Any]]) -> dict[str, int]:
+    frequencies: Counter[str] = Counter()
+    for record in records:
+        frequencies.update(record["tokens"].keys())
+    return dict(frequencies)
+
+
+def _average_doc_length(records: list[dict[str, Any]]) -> float:
+    if not records:
+        return 0.0
+    return sum(sum(record["tokens"].values()) for record in records) / len(records)
+
+
+def _score_record(query_terms: dict[str, int], record: dict[str, Any], payload: dict[str, Any]) -> float:
     token_counts = record["tokens"]
     score = 0.0
+    total_docs = max(1, int(payload.get("chunk_count") or len(payload.get("records") or [])))
+    document_frequencies = payload.get("document_frequencies") or {}
+    avg_doc_len = float(payload.get("avg_doc_len") or 1.0)
+    doc_len = max(1, sum(token_counts.values()))
     for term, query_count in query_terms.items():
-        count = token_counts.get(term, 0)
-        if count:
-            score += (1 + math.log(count)) * query_count
+        term_frequency = token_counts.get(term, 0)
+        if term_frequency:
+            doc_frequency = int(document_frequencies.get(term, 1))
+            idf = math.log(1 + (total_docs - doc_frequency + 0.5) / (doc_frequency + 0.5))
+            denominator = term_frequency + BM25_K1 * (1 - BM25_B + BM25_B * doc_len / avg_doc_len)
+            score += idf * ((term_frequency * (BM25_K1 + 1)) / denominator) * query_count
     text = record["chunk"]["text"]
     for term in query_terms:
         if len(term) >= 3 and term in text:
