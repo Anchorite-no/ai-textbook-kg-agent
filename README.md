@@ -114,6 +114,8 @@ backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage7_alignment.py
 backend\.venv\Scripts\python.exe backend\scripts\benchmark_00_stage7_alignment.py
 backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage8_integration.py
 backend\.venv\Scripts\python.exe backend\scripts\benchmark_00_stage8_integration.py
+backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage9_graphrag.py
+backend\.venv\Scripts\python.exe backend\scripts\benchmark_00_stage9_graphrag.py
 ```
 
 导出前后端契约快照：
@@ -205,6 +207,25 @@ Invoke-RestMethod "http://127.0.0.1:8010/api/integration?raw_file_ids=raw_a,raw_
 
 阶段 8 输出 `merge/keep/remove/refine/conflict` 决策、`IntegratedConcept` 和 `CompressionStats`。`remove` 只表示从整合正文移出，不删除原始 KG 和证据。
 
+GraphRAG 问答：
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/graphrag/query -Body (@{
+  question = "学习动作电位前要先学什么？"
+  top_k = 5
+  raw_file_ids = @("raw_a", "raw_b")
+  include_decisions = $true
+} | ConvertTo-Json) -ContentType "application/json"
+```
+
+GraphRAG 状态：
+
+```powershell
+Invoke-RestMethod "http://127.0.0.1:8010/api/graphrag/status?raw_file_ids=raw_a,raw_b"
+```
+
+阶段 9 返回 `citations`、`source_chunks`、`node_hits`、`paths` 和 `decisions`，用于回答定义、教材来源、差异、前置知识、关系路径和整合决策原因。
+
 建立 RAG 证据索引：
 
 ```powershell
@@ -244,6 +265,12 @@ data\alignments\stage7_alignment_benchmark_latest.json
 data\integrations\stage8_integration_benchmark_latest.json
 ```
 
+阶段 9 benchmark 结果会写入：
+
+```text
+data\indexes\stage9_graphrag_benchmark_latest.json
+```
+
 ## 前端启动
 
 ```powershell
@@ -272,3 +299,4 @@ npm run dev
 - `/api/kg/layers/build` 多层 KG 基础构建。
 - `/api/alignment/build` 跨教材术语对齐候选和 ConceptCluster。
 - `/api/integration/build` 跨教材整合与压缩决策。
+- `/api/graphrag/query` GraphRAG 问答，返回引用、知识点、路径和整合决策证据。

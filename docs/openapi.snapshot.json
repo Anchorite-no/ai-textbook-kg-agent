@@ -1589,6 +1589,136 @@
         }
       }
     },
+    "/api/graphrag/status": {
+      "get": {
+        "tags": [
+          "graphrag"
+        ],
+        "summary": "Graph Rag Status",
+        "operationId": "graph_rag_status_api_graphrag_status_get",
+        "parameters": [
+          {
+            "name": "raw_file_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Raw File Ids"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphRagStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/graphrag/query": {
+      "post": {
+        "tags": [
+          "graphrag"
+        ],
+        "summary": "Graph Rag Query",
+        "operationId": "graph_rag_query_api_graphrag_query_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GraphRagQueryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphRagQueryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/jobs/{job_id}": {
       "get": {
         "tags": [
@@ -2652,6 +2782,373 @@
           "raw_file_id"
         ],
         "title": "GraphNodeDetailResponse"
+      },
+      "GraphRagIntent": {
+        "type": "string",
+        "enum": [
+          "definition",
+          "coverage",
+          "comparison",
+          "prerequisite",
+          "relation_path",
+          "decision_review",
+          "hybrid"
+        ],
+        "title": "GraphRagIntent"
+      },
+      "GraphRagNodeHit": {
+        "properties": {
+          "node": {
+            "$ref": "#/components/schemas/KnowledgeNode"
+          },
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          },
+          "textbook": {
+            "type": "string",
+            "title": "Textbook"
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Score"
+          },
+          "matched_terms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Matched Terms"
+          },
+          "matched_aliases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Matched Aliases"
+          },
+          "source_locator": {
+            "$ref": "#/components/schemas/SourceLocator"
+          },
+          "evidence_chunk_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Chunk Ids"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "node",
+          "raw_file_id",
+          "textbook",
+          "score",
+          "source_locator"
+        ],
+        "title": "GraphRagNodeHit"
+      },
+      "GraphRagPath": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "path_type": {
+            "type": "string",
+            "title": "Path Type"
+          },
+          "node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Node Ids"
+          },
+          "node_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Node Names"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/GraphRagPathStep"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "evidence_chunk_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Chunk Ids"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "default": 0.0
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "path_type",
+          "reason"
+        ],
+        "title": "GraphRagPath"
+      },
+      "GraphRagPathStep": {
+        "properties": {
+          "source_node_id": {
+            "type": "string",
+            "title": "Source Node Id"
+          },
+          "source_node_name": {
+            "type": "string",
+            "title": "Source Node Name"
+          },
+          "target_node_id": {
+            "type": "string",
+            "title": "Target Node Id"
+          },
+          "target_node_name": {
+            "type": "string",
+            "title": "Target Node Name"
+          },
+          "relation_type": {
+            "$ref": "#/components/schemas/KnowledgeRelationType"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "default": 0.0
+          },
+          "evidence_chunk_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Chunk Ids"
+          },
+          "source_locator": {
+            "$ref": "#/components/schemas/SourceLocator"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_node_id",
+          "source_node_name",
+          "target_node_id",
+          "target_node_name",
+          "relation_type",
+          "source_locator"
+        ],
+        "title": "GraphRagPathStep"
+      },
+      "GraphRagQueryRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Question"
+          },
+          "top_k": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Top K",
+            "default": 5
+          },
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "max_path_depth": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "Max Path Depth",
+            "default": 2
+          },
+          "include_decisions": {
+            "type": "boolean",
+            "title": "Include Decisions",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "GraphRagQueryRequest"
+      },
+      "GraphRagQueryResponse": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/GraphRagIntent"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/RagCitation"
+            },
+            "type": "array",
+            "title": "Citations"
+          },
+          "source_chunks": {
+            "items": {
+              "$ref": "#/components/schemas/Chunk"
+            },
+            "type": "array",
+            "title": "Source Chunks"
+          },
+          "node_hits": {
+            "items": {
+              "$ref": "#/components/schemas/GraphRagNodeHit"
+            },
+            "type": "array",
+            "title": "Node Hits"
+          },
+          "paths": {
+            "items": {
+              "$ref": "#/components/schemas/GraphRagPath"
+            },
+            "type": "array",
+            "title": "Paths"
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/IntegrationDecision"
+            },
+            "type": "array",
+            "title": "Decisions"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "question",
+          "intent",
+          "answer"
+        ],
+        "title": "GraphRagQueryResponse"
+      },
+      "GraphRagStatus": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "empty",
+              "partial",
+              "ready"
+            ],
+            "title": "Status"
+          },
+          "rag_index_status": {
+            "$ref": "#/components/schemas/RagIndexStatus"
+          },
+          "graph_count": {
+            "type": "integer",
+            "title": "Graph Count",
+            "default": 0
+          },
+          "node_count": {
+            "type": "integer",
+            "title": "Node Count",
+            "default": 0
+          },
+          "edge_count": {
+            "type": "integer",
+            "title": "Edge Count",
+            "default": 0
+          },
+          "alignment_available": {
+            "type": "boolean",
+            "title": "Alignment Available",
+            "default": false
+          },
+          "integration_available": {
+            "type": "boolean",
+            "title": "Integration Available",
+            "default": false
+          },
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "rag_index_status"
+        ],
+        "title": "GraphRagStatus"
       },
       "GraphResponse": {
         "properties": {

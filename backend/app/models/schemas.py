@@ -494,6 +494,85 @@ class RagQueryResponse(ContractModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class GraphRagIntent(str, Enum):
+    definition = "definition"
+    coverage = "coverage"
+    comparison = "comparison"
+    prerequisite = "prerequisite"
+    relation_path = "relation_path"
+    decision_review = "decision_review"
+    hybrid = "hybrid"
+
+
+class GraphRagQueryRequest(ContractModel):
+    question: str = Field(min_length=1)
+    top_k: int = Field(default=5, ge=1, le=20)
+    raw_file_ids: list[str] = Field(default_factory=list)
+    max_path_depth: int = Field(default=2, ge=1, le=4)
+    include_decisions: bool = True
+
+
+class GraphRagNodeHit(ContractModel):
+    node: KnowledgeNode
+    raw_file_id: str
+    textbook: str
+    score: float = Field(ge=0)
+    matched_terms: list[str] = Field(default_factory=list)
+    matched_aliases: list[str] = Field(default_factory=list)
+    source_locator: SourceLocator
+    evidence_chunk_ids: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphRagPathStep(ContractModel):
+    source_node_id: str
+    source_node_name: str
+    target_node_id: str
+    target_node_name: str
+    relation_type: KnowledgeRelationType
+    description: str | None = None
+    confidence: float = Field(ge=0, le=1, default=0.0)
+    evidence_chunk_ids: list[str] = Field(default_factory=list)
+    source_locator: SourceLocator
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphRagPath(ContractModel):
+    id: str
+    path_type: str
+    node_ids: list[str] = Field(default_factory=list)
+    node_names: list[str] = Field(default_factory=list)
+    steps: list[GraphRagPathStep] = Field(default_factory=list)
+    evidence_chunk_ids: list[str] = Field(default_factory=list)
+    confidence: float = Field(ge=0, le=1, default=0.0)
+    reason: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphRagQueryResponse(ContractModel):
+    question: str
+    intent: GraphRagIntent
+    answer: str
+    citations: list[RagCitation] = Field(default_factory=list)
+    source_chunks: list[Chunk] = Field(default_factory=list)
+    node_hits: list[GraphRagNodeHit] = Field(default_factory=list)
+    paths: list[GraphRagPath] = Field(default_factory=list)
+    decisions: list[IntegrationDecision] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphRagStatus(ContractModel):
+    status: Literal["empty", "partial", "ready"]
+    rag_index_status: RagIndexStatus
+    graph_count: int = 0
+    node_count: int = 0
+    edge_count: int = 0
+    alignment_available: bool = False
+    integration_available: bool = False
+    raw_file_ids: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class ParsedTextbook(ContractModel):
     id: str
     raw_file: RawFile
