@@ -13,8 +13,17 @@ import { ApiError } from "./api/errors";
 import { toastStore } from "./components/layout/ToastViewport";
 import "./styles/index.css";
 
+const SILENT_EMPTY_STATE_QUERY_CODES = new Set([
+  "ALIGNMENT_NOT_FOUND",
+  "INTEGRATION_NOT_FOUND"
+]);
+
 function reportError(error: unknown, kind: "query" | "mutation") {
   if (error instanceof ApiError) {
+    if (kind === "query" && SILENT_EMPTY_STATE_QUERY_CODES.has(error.code)) {
+      return;
+    }
+
     toastStore.push({
       tone: "error",
       title: error.message,
