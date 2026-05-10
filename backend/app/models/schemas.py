@@ -360,6 +360,7 @@ class RagCitation(ContractModel):
     source_locator: SourceLocator
     relevance_score: float = Field(ge=0, le=1)
     quote: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class RagQueryResponse(ContractModel):

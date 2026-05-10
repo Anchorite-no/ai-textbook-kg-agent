@@ -27,8 +27,11 @@ def main() -> None:
             sample.write_text(
                 "# 第一章 膜电位\n"
                 "静息电位是动作电位的基础。"
+                "动作电位是一种膜电位变化。"
+                "细胞膜结构组成神经细胞。"
                 "动作电位用于神经传导。"
                 "膜电位变化导致神经传导过程。"
+                "动作电位与静息电位不同。"
                 "动作电位和静息电位都是膜电位。\n",
                 encoding="utf-8",
             )
@@ -53,16 +56,22 @@ def main() -> None:
             relation_types = {edge["relation_type"] for edge in payload["graph"]["edges"]}
             assert "PREREQUISITE_OF" in relation_types, relation_types
             assert "CONTAINS" in relation_types, relation_types
+            assert "IS_A" in relation_types or "PART_OF" in relation_types, relation_types
+            assert "CONTRASTS_WITH" in relation_types, relation_types
             assert "CAUSES" in relation_types or "APPLIES_TO" in relation_types, relation_types
             for node in payload["graph"]["nodes"]:
                 assert node["source_locator"]["raw_file_id"] == parsed.raw_file.id
                 assert node["evidence_chunk_ids"], node
                 assert node["metadata"]["source_quote"], node
+                assert node["metadata"]["source_quote_verified"] is True, node
+                assert node["metadata"]["evidence_strategy"], node
                 assert node["metadata"]["chapter"], node
             for edge in payload["graph"]["edges"]:
                 assert edge["source_locator"]["raw_file_id"] == parsed.raw_file.id
                 assert edge["evidence_chunk_ids"], edge
                 assert edge["metadata"]["source_quote"], edge
+                assert edge["metadata"]["source_quote_verified"] is True, edge
+                assert edge["metadata"]["evidence_strategy"], edge
 
             graph = client.get(f"/api/graph?raw_file_id={parsed.raw_file.id}&top_n=200")
             assert graph.status_code == 200, graph.text

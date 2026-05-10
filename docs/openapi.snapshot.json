@@ -2742,6 +2742,11 @@
           "quote": {
             "type": "string",
             "title": "Quote"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
           }
         },
         "additionalProperties": false,

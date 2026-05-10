@@ -107,6 +107,7 @@ $env:PYTHONPATH=(Resolve-Path backend).Path
 backend\.venv\Scripts\python.exe backend\scripts\smoke_phase2.py
 backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage3_async.py
 backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage4_rag.py
+backend\.venv\Scripts\python.exe backend\scripts\benchmark_00_stage4_rag.py
 backend\.venv\Scripts\python.exe backend\scripts\smoke_phase3.py
 backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage6_layered_kg.py
 ```
@@ -180,7 +181,13 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/rag/query -Body (@
 } | ConvertTo-Json) -ContentType "application/json"
 ```
 
-当前 RAG 是本地 BM25 Evidence Index，先保证 `citations` 和 `source_chunks` 稳定，后续再替换为向量库 / embedding 混合检索。
+当前 RAG 是本地混合 Evidence Index：BM25 + lightweight hash embedding + query coverage，先保证 `citations`、`source_chunks`、拒答和 benchmark 稳定，后续再替换为 FAISS / Chroma / 模型 embedding。
+
+阶段 4 benchmark 结果会写入：
+
+```text
+data\indexes\stage4_rag_benchmark_latest.json
+```
 
 ## 前端启动
 

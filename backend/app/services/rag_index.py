@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import math
 import re
+import hashlib
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
@@ -21,10 +22,15 @@ from app.models.schemas import (
 from app.services.parsed_storage import list_parsed_textbooks, load_parsed_textbook
 
 
-INDEX_VERSION = "local_bm25_v1"
+INDEX_VERSION = "hybrid_bm25_hash_embedding_v1"
 INDEX_FILENAME = "rag_index.json"
 BM25_K1 = 1.5
 BM25_B = 0.75
+MIN_QUERY_COVERAGE = 0.12
+HASH_EMBEDDING_DIM = 256
+VECTOR_SCORE_WEIGHT = 2.0
+QUERY_STOP_CHARS = set("的是么吗呢了和与对有前要先学")
+QUERY_STOP_FRAGMENTS = ("什么", "为什么", "如何", "怎么", "定义", "基本", "作用", "关系", "哪些", "多少")
 
 
 def build_rag_index(request: RagIndexRequest, job: JobRecord) -> RagIndexStatus:
@@ -50,6 +56,7 @@ def build_rag_index(request: RagIndexRequest, job: JobRecord) -> RagIndexStatus:
                     "chapter": section.title if section is not None else None,
                     "section_id": chunk.section_id,
                     "tokens": _token_counts(chunk.text),
+                    "embedding": _hash_embedding(_token_counts(chunk.text)),
                     "char_count": chunk.char_count,
                 }
             )
@@ -62,6 +69,13 @@ def build_rag_index(request: RagIndexRequest, job: JobRecord) -> RagIndexStatus:
         "raw_file_ids": seen_books,
         "textbook_count": len(seen_books),
         "chunk_count": len(records),
+        "format_counts": dict(Counter(record["format"] for record in records)),
+        "locator_coverage": _locator_coverage(records),
+        "embedding": {
+            "backend": "local_hash_embedding",
+            "dimensions": HASH_EMBEDDING_DIM,
+            "note": "轻量本地 embedding，用于阶段 4 证据索引；后续可替换 FAISS/Chroma。",
+        },
         "document_frequencies": document_frequencies,
         "avg_doc_len": avg_doc_len,
         "records": records,
@@ -88,7 +102,7 @@ def query_rag_index(request: RagQueryRequest) -> RagQueryResponse:
             metadata={"reason": "index_empty"},
         )
 
-    query_terms = _token_counts(request.question)
+    query_terms = _query_token_counts(request.question)
     if not query_terms:
         return RagQueryResponse(
             question=request.question,
@@ -101,26 +115,37 @@ def query_rag_index(request: RagQueryRequest) -> RagQueryResponse:
         allowed = set(request.raw_file_ids)
         records = [record for record in records if record["raw_file_id"] in allowed]
 
-    scored = [
-        (score, record)
-        for record in records
-        if (score := _score_record(query_terms, record, payload)) > 0
-    ]
-    scored.sort(key=lambda item: item[0], reverse=True)
+    query_embedding = _hash_embedding(query_terms)
+    scored: list[tuple[float, float, float, float, dict[str, int], dict[str, Any]]] = []
+    for record in records:
+        bm25_score = _bm25_score_record(query_terms, record, payload)
+        vector_score = _cosine_similarity(query_embedding, record.get("embedding") or {})
+        score = bm25_score + VECTOR_SCORE_WEIGHT * vector_score
+        matched_terms = _matched_terms(query_terms, record)
+        coverage = _query_coverage(query_terms, matched_terms)
+        if score > 0 and coverage >= MIN_QUERY_COVERAGE:
+            scored.append((score, bm25_score, vector_score, coverage, matched_terms, record))
+    scored.sort(key=lambda item: (item[0], item[1]), reverse=True)
     top = scored[: request.top_k]
 
     if not top:
         return RagQueryResponse(
             question=request.question,
             answer="当前知识库中未找到相关信息。",
-            metadata={"reason": "no_positive_match", "index_version": payload.get("version")},
+            metadata={
+                "reason": "no_grounded_match",
+                "index_version": payload.get("version"),
+                "min_query_coverage": MIN_QUERY_COVERAGE,
+                "retrieval": "hybrid_bm25_hash_embedding_with_query_coverage",
+                "embedding_backend": payload.get("embedding", {}).get("backend"),
+            },
         )
 
     max_score = top[0][0] or 1.0
     citations: list[RagCitation] = []
     source_chunks: list[Chunk] = []
     answer_parts: list[str] = []
-    for score, record in top:
+    for score, bm25_score, vector_score, coverage, matched_terms, record in top:
         chunk = Chunk.model_validate(record["chunk"])
         quote = _best_quote(request.question, chunk.text)
         source_chunks.append(chunk)
@@ -134,6 +159,17 @@ def query_rag_index(request: RagQueryRequest) -> RagQueryResponse:
                 source_locator=chunk.source_locator,
                 relevance_score=round(normalized_score, 4),
                 quote=quote,
+                metadata={
+                    "retrieval": "hybrid_bm25_hash_embedding_with_query_coverage",
+                    "raw_score": round(score, 6),
+                    "bm25_score": round(bm25_score, 6),
+                    "vector_score": round(vector_score, 6),
+                    "query_coverage": round(coverage, 4),
+                    "matched_terms": matched_terms,
+                    "section_id": record.get("section_id"),
+                    "format": record.get("format"),
+                    "quote_hash": chunk.source_locator.quote_hash,
+                },
             )
         )
         locator = chunk.source_locator.locator_text
@@ -146,11 +182,14 @@ def query_rag_index(request: RagQueryRequest) -> RagQueryResponse:
         source_chunks=source_chunks,
         metadata={
             "index_version": payload.get("version"),
-            "retrieval": "local_bm25",
+            "retrieval": "hybrid_bm25_hash_embedding_with_query_coverage",
+            "embedding_backend": payload.get("embedding", {}).get("backend"),
+            "embedding_dimensions": payload.get("embedding", {}).get("dimensions"),
             "top_k": request.top_k,
             "matched_count": len(top),
             "textbook_count": payload.get("textbook_count", 0),
             "chunk_count": payload.get("chunk_count", 0),
+            "min_query_coverage": MIN_QUERY_COVERAGE,
         },
     )
 
@@ -179,8 +218,12 @@ def _status_from_payload(payload: dict[str, Any], path: Path) -> RagIndexStatus:
         metadata={
             "version": payload.get("version"),
             "built_by_job_id": payload.get("built_by_job_id"),
-            "retrieval": "local_bm25",
+            "retrieval": "hybrid_bm25_hash_embedding_with_query_coverage",
+            "embedding_backend": (payload.get("embedding") or {}).get("backend"),
+            "embedding_dimensions": (payload.get("embedding") or {}).get("dimensions"),
             "avg_doc_len": payload.get("avg_doc_len"),
+            "format_counts": payload.get("format_counts") or {},
+            "locator_coverage": payload.get("locator_coverage") or {},
         },
     )
 
@@ -198,6 +241,26 @@ def _token_counts(text: str) -> dict[str, int]:
     return dict(Counter(token for token in tokens if token.strip()))
 
 
+def _query_token_counts(text: str) -> dict[str, int]:
+    raw_terms = _token_counts(text)
+    filtered: dict[str, int] = {}
+    for token, count in raw_terms.items():
+        if _is_query_stop_token(token):
+            continue
+        filtered[token] = count
+    return filtered or raw_terms
+
+
+def _is_query_stop_token(token: str) -> bool:
+    if token in QUERY_STOP_FRAGMENTS:
+        return True
+    if any(fragment in token for fragment in QUERY_STOP_FRAGMENTS):
+        return True
+    if re.search(r"[\u4e00-\u9fa5]", token) and any(char in QUERY_STOP_CHARS for char in token):
+        return True
+    return False
+
+
 def _document_frequencies(records: list[dict[str, Any]]) -> dict[str, int]:
     frequencies: Counter[str] = Counter()
     for record in records:
@@ -211,7 +274,7 @@ def _average_doc_length(records: list[dict[str, Any]]) -> float:
     return sum(sum(record["tokens"].values()) for record in records) / len(records)
 
 
-def _score_record(query_terms: dict[str, int], record: dict[str, Any], payload: dict[str, Any]) -> float:
+def _bm25_score_record(query_terms: dict[str, int], record: dict[str, Any], payload: dict[str, Any]) -> float:
     token_counts = record["tokens"]
     score = 0.0
     total_docs = max(1, int(payload.get("chunk_count") or len(payload.get("records") or [])))
@@ -232,14 +295,103 @@ def _score_record(query_terms: dict[str, int], record: dict[str, Any], payload: 
     return score
 
 
+def _hash_embedding(token_counts: dict[str, int]) -> dict[str, float]:
+    vector: dict[int, float] = {}
+    norm = sum(token_counts.values()) or 1
+    for token, count in token_counts.items():
+        token_hash = _stable_hash(token)
+        index = token_hash % HASH_EMBEDDING_DIM
+        sign = 1 if _stable_hash(f"{token}:sign") % 2 == 0 else -1
+        vector[index] = vector.get(index, 0.0) + sign * (count / norm)
+    magnitude = math.sqrt(sum(value * value for value in vector.values())) or 1.0
+    return {str(index): round(value / magnitude, 6) for index, value in vector.items() if value}
+
+
+def _stable_hash(value: str) -> int:
+    return int(hashlib.sha256(value.encode("utf-8")).hexdigest()[:16], 16)
+
+
+def _cosine_similarity(left: dict[str, float], right: dict[str, float]) -> float:
+    if not left or not right:
+        return 0.0
+    if len(left) > len(right):
+        left, right = right, left
+    score = 0.0
+    for index, value in left.items():
+        score += value * float(right.get(index, 0.0))
+    return max(0.0, score)
+
+
+def _matched_terms(query_terms: dict[str, int], record: dict[str, Any]) -> dict[str, int]:
+    token_counts = record["tokens"]
+    text = record["chunk"]["text"]
+    matched: dict[str, int] = {}
+    for term in query_terms:
+        count = int(token_counts.get(term, 0))
+        if not count and len(term) >= 3 and term in text:
+            count = 1
+        if count:
+            matched[term] = count
+    return matched
+
+
+def _query_coverage(query_terms: dict[str, int], matched_terms: dict[str, int]) -> float:
+    if not query_terms:
+        return 0.0
+    matched_weight = sum(query_terms[term] for term in matched_terms)
+    total_weight = sum(query_terms.values())
+    return matched_weight / max(1, total_weight)
+
+
+def _locator_coverage(records: list[dict[str, Any]]) -> dict[str, float]:
+    if not records:
+        return {"source_locator": 0.0, "page": 0.0, "line": 0.0, "sheet_row": 0.0, "slide": 0.0}
+    total = len(records)
+    source_locator = 0
+    page = 0
+    line = 0
+    sheet_row = 0
+    slide = 0
+    for record in records:
+        locator = record["chunk"].get("source_locator") or {}
+        if locator.get("locator_text"):
+            source_locator += 1
+        if locator.get("page_start") is not None or locator.get("page_end") is not None:
+            page += 1
+        if locator.get("line_start") is not None or locator.get("line_end") is not None:
+            line += 1
+        if locator.get("sheet_name") is not None or locator.get("row_start") is not None or locator.get("row_end") is not None:
+            sheet_row += 1
+        if locator.get("slide_number") is not None:
+            slide += 1
+    return {
+        "source_locator": round(source_locator / total, 4),
+        "page": round(page / total, 4),
+        "line": round(line / total, 4),
+        "sheet_row": round(sheet_row / total, 4),
+        "slide": round(slide / total, 4),
+    }
+
+
 def _best_quote(question: str, text: str, limit: int = 180) -> str:
-    terms = _token_counts(question)
+    terms = _query_token_counts(question)
     sentences = [sentence.strip() for sentence in re.split(r"(?<=[。！？!?；;])", text) if sentence.strip()]
     if not sentences:
         return text[:limit]
+    intent_markers = _intent_markers(question)
     ranked = sorted(
         sentences,
-        key=lambda sentence: sum(1 for term in terms if term in sentence),
+        key=lambda sentence: 5 * sum(1 for term in terms if term in sentence) + 2 * sum(1 for marker in intent_markers if marker in sentence),
         reverse=True,
     )
     return ranked[0][:limit]
+
+
+def _intent_markers(question: str) -> tuple[str, ...]:
+    if any(marker in question for marker in ("前", "先", "预备", "基础")):
+        return ("基础", "前提", "依赖", "需要先")
+    if any(marker in question for marker in ("为什么", "导致", "引起", "造成")):
+        return ("导致", "引起", "因为", "由于", "影响")
+    if any(marker in question for marker in ("关系", "区别", "对比", "不同")):
+        return ("关系", "不同", "区别", "引起", "导致", "构成", "基础", "属于")
+    return ()

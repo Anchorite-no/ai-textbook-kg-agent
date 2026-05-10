@@ -58,10 +58,16 @@ def main() -> None:
             assert query_payload["source_chunks"], query_payload
             assert "动作电位" in query_payload["answer"], query_payload
             assert query_payload["citations"][0]["source_locator"]["raw_file_id"] == parsed.raw_file.id
+            assert query_payload["citations"][0]["metadata"]["query_coverage"] > 0, query_payload
+            assert query_payload["citations"][0]["metadata"]["matched_terms"], query_payload
+            assert query_payload["metadata"]["retrieval"] == "hybrid_bm25_hash_embedding_with_query_coverage", query_payload
+            assert query_payload["metadata"]["embedding_backend"] == "local_hash_embedding", query_payload
+            assert query_payload["citations"][0]["metadata"]["vector_score"] >= 0, query_payload
 
             miss = client.post("/api/rag/query", json={"question": "火星土壤采样器", "top_k": 3})
             assert miss.status_code == 200, miss.text
             assert miss.json()["answer"] == "当前知识库中未找到相关信息。", miss.text
+            assert miss.json()["metadata"]["reason"] == "no_grounded_match", miss.text
     finally:
         for path in settings.parsed_data_dir.glob("raw_*.json"):
             if path not in before_parsed:

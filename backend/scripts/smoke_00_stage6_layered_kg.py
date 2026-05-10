@@ -12,6 +12,8 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 from app.core.config import settings  # noqa: E402
 from app.main import app  # noqa: E402
+from app.services.graph_storage import graph_path  # noqa: E402
+from app.services.layered_graph_storage import layered_graph_path  # noqa: E402
 from app.services.uploaded_file_parser import parse_uploaded_file  # noqa: E402
 
 
@@ -29,9 +31,12 @@ def main() -> None:
             sample.write_text(
                 "# 第一章 神经调节\n"
                 "静息电位是动作电位的基础。"
+                "动作电位是一种膜电位变化。"
                 "动作电位用于神经传导。"
                 "膜电位变化导致神经传导过程。"
-                "动作电位和静息电位都是膜电位。\n",
+                "动作电位和静息电位都是膜电位。\n"
+                "# 第二章 神经应用\n"
+                "神经传导依赖动作电位。神经系统功能需要细胞膜结构支持。\n",
                 encoding="utf-8",
             )
             parsed, _output_path = parse_uploaded_file(sample, sample.name)
@@ -75,11 +80,15 @@ def main() -> None:
             assert layers["document_tree"]["node_count"] >= len(parsed.sections) + len(parsed.chunks) + 1, layers
             assert layers["concept_kg"]["node_count"] >= 2, layers
             assert layers["evidence_graph"]["edge_count"] >= 1, layers
+            assert any(node["node_type"] == "SourceQuote" for node in layered["nodes"]), layered
 
             for node in layered["nodes"]:
                 assert node["source_locator"]["raw_file_id"] == parsed.raw_file.id, node
                 if node["node_type"] == "Chunk":
                     assert node["evidence_chunk_ids"], node
+                if node["node_type"] == "SourceQuote":
+                    assert node["metadata"]["quote"], node
+                    assert node["metadata"]["quote_hash"], node
             for edge in layered["edges"]:
                 assert edge["source_locator"]["raw_file_id"] == parsed.raw_file.id, edge
                 if edge["relation_type"] in {"HAS_CHUNK", "EVIDENCED_BY"}:
@@ -88,9 +97,23 @@ def main() -> None:
             document_edges = {edge["relation_type"] for edge in layered["edges"] if edge["layer_type"] == "document_tree"}
             concept_edges = {edge["relation_type"] for edge in layered["edges"] if edge["layer_type"] == "concept_kg"}
             evidence_edges = {edge["relation_type"] for edge in layered["edges"] if edge["layer_type"] == "evidence_graph"}
-            assert {"CONTAINS", "HAS_CHUNK"}.issubset(document_edges), document_edges
+            assert {"CONTAINS", "HAS_CHUNK", "PREVIOUS"}.issubset(document_edges), document_edges
             assert "PREREQUISITE_OF" in concept_edges, concept_edges
-            assert "EVIDENCED_BY" in evidence_edges, evidence_edges
+            assert {"EVIDENCED_BY", "HAS_SOURCE_QUOTE", "DERIVED_FROM"}.issubset(evidence_edges), evidence_edges
+
+            graph_path(parsed.raw_file.id).unlink(missing_ok=True)
+            layered_graph_path(parsed.raw_file.id).unlink(missing_ok=True)
+            no_cache_build = client.post(
+                "/api/kg/layers/build",
+                json={
+                    "raw_file_id": parsed.raw_file.id,
+                    "force_rebuild": True,
+                    "build_missing_concept_graph": True,
+                    "use_llm": False,
+                },
+            )
+            assert no_cache_build.status_code == 200, no_cache_build.text
+            assert no_cache_build.json()["layered_graph"]["metadata"]["concept_node_count"] >= 2, no_cache_build.text
 
             fetched = client.get(f"/api/kg/layers?raw_file_id={parsed.raw_file.id}")
             assert fetched.status_code == 200, fetched.text

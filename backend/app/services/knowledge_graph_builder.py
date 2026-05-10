@@ -39,6 +39,8 @@ class NodeDraft:
     category: str
     source_quote: str
     chunk: Chunk
+    source_quote_verified: bool
+    evidence_strategy: str
 
 
 @dataclass(frozen=True)
@@ -49,6 +51,8 @@ class EdgeDraft:
     description: str
     source_quote: str
     chunk: Chunk
+    source_quote_verified: bool
+    evidence_strategy: str
 
 
 def build_knowledge_graph(request: GraphBuildRequest) -> tuple[GraphResponse, str, bool]:
@@ -162,7 +166,8 @@ def _build_prompt(section: Section, text: str) -> str:
 输出严格 JSON，不要输出 Markdown。
 节点必须包含 name、definition、category、source_quote。
 关系必须包含 source、target、relation_type、description、source_quote。
-relation_type 只能是 prerequisite、parallel、contains、applies_to、causes、leads_to、explains。
+relation_type 只能是 prerequisite、parallel、contains、applies_to、causes、leads_to、explains、is_a、part_of、contrasts_with。
+source_quote 必须是章节内容中的原文短句，不允许改写。
 如果证据不足，不要编造关系。
 
 章节标题：{section.title}
@@ -180,14 +185,16 @@ def _drafts_from_llm(payload: dict[str, Any], chunks: list[Chunk], section: Sect
         if not name:
             continue
         quote = str(item.get("source_quote") or item.get("definition") or name)
-        chunk = _chunk_for_quote(chunks, quote)
+        chunk, grounded_quote, verified, strategy = _ground_evidence(chunks, quote, name)
         node_drafts.append(
             NodeDraft(
                 name=name,
                 definition=str(item.get("definition") or _definition_for_term(name, chunk.text)),
                 category=str(item.get("category") or "核心概念"),
-                source_quote=_trim_quote(quote),
+                source_quote=grounded_quote,
                 chunk=chunk,
+                source_quote_verified=verified,
+                evidence_strategy=strategy,
             )
         )
 
@@ -200,14 +207,19 @@ def _drafts_from_llm(payload: dict[str, Any], chunks: list[Chunk], section: Sect
         if not source_name or not target_name:
             continue
         quote = str(item.get("source_quote") or item.get("description") or section.title)
+        chunk, grounded_quote, verified, strategy = _ground_evidence(chunks, quote, source_name, target_name)
+        if not verified:
+            continue
         edge_drafts.append(
             EdgeDraft(
                 source_name=source_name,
                 target_name=target_name,
                 relation_type=_relation_from_text(str(item.get("relation_type") or "")),
                 description=str(item.get("description") or ""),
-                source_quote=_trim_quote(quote),
-                chunk=_chunk_for_quote(chunks, quote),
+                source_quote=grounded_quote,
+                chunk=chunk,
+                source_quote_verified=verified,
+                evidence_strategy=strategy,
             )
         )
     return node_drafts, edge_drafts
@@ -216,16 +228,20 @@ def _drafts_from_llm(payload: dict[str, Any], chunks: list[Chunk], section: Sect
 def _fallback_drafts(section: Section, chunks: list[Chunk], max_nodes: int) -> tuple[list[NodeDraft], list[EdgeDraft]]:
     text = _section_text(section, chunks)
     names = _candidate_terms(section.title, text)[:max_nodes]
-    node_drafts = [
-        NodeDraft(
-            name=name,
-            definition=_definition_for_term(name, text),
-            category=_category_for_term(name),
-            source_quote=_definition_for_term(name, text),
-            chunk=_chunk_for_quote(chunks, name),
+    node_drafts: list[NodeDraft] = []
+    for name in names:
+        chunk, quote, verified, strategy = _ground_evidence(chunks, _definition_for_term(name, text), name)
+        node_drafts.append(
+            NodeDraft(
+                name=name,
+                definition=_definition_for_term(name, text),
+                category=_category_for_term(name),
+                source_quote=quote,
+                chunk=chunk,
+                source_quote_verified=verified,
+                evidence_strategy=strategy,
+            )
         )
-        for name in names
-    ]
     edge_drafts = _fallback_edges(names, text, chunks)
     return node_drafts, edge_drafts
 
@@ -247,14 +263,17 @@ def _fallback_edges(names: list[str], text: str, chunks: list[Chunk]) -> list[Ed
         return edges
     hub = names[0]
     for name in names[1:4]:
+        chunk, quote, verified, strategy = _ground_evidence(chunks, _definition_for_term(name, text), name)
         edges.append(
             EdgeDraft(
                 source_name=hub,
                 target_name=name,
                 relation_type=KnowledgeRelationType.contains,
                 description=f"{hub} 章节内容包含 {name}。",
-                source_quote=_definition_for_term(name, text),
-                chunk=_chunk_for_quote(chunks, name),
+                source_quote=quote,
+                chunk=chunk,
+                source_quote_verified=verified,
+                evidence_strategy=f"fallback_contains:{strategy}",
             )
         )
 
@@ -265,6 +284,14 @@ def _fallback_edges(names: list[str], text: str, chunks: list[Chunk]) -> list[Ed
     applies_to = _keyword_edge(names, text, chunks, ("应用", "用于", "适用于", "作用于"), KnowledgeRelationType.applies_to)
     if applies_to is not None:
         edges.append(applies_to)
+
+    is_a = _keyword_edge(names, text, chunks, ("是一种", "属于", "归为", "称为"), KnowledgeRelationType.is_a)
+    if is_a is not None:
+        edges.append(is_a)
+
+    part_of = _keyword_edge(names, text, chunks, ("组成", "构成", "部分", "包括"), KnowledgeRelationType.part_of)
+    if part_of is not None:
+        edges.append(part_of)
 
     causes = _keyword_edge(names, text, chunks, ("导致", "引起", "造成", "诱发"), KnowledgeRelationType.causes)
     if causes is not None:
@@ -278,15 +305,22 @@ def _fallback_edges(names: list[str], text: str, chunks: list[Chunk]) -> list[Ed
     if explains is not None:
         edges.append(explains)
 
+    contrasts = _keyword_edge(names, text, chunks, ("不同", "区别", "相反", "对比"), KnowledgeRelationType.contrasts_with)
+    if contrasts is not None:
+        edges.append(contrasts)
+
     if len(names) >= 3:
+        chunk, quote, verified, strategy = _ground_evidence(chunks, _definition_for_term(names[1], text), names[1], names[2])
         edges.append(
             EdgeDraft(
                 source_name=names[1],
                 target_name=names[2],
                 relation_type=KnowledgeRelationType.parallel_with,
                 description=f"{names[1]} 与 {names[2]} 在同一章节中并列出现。",
-                source_quote=_definition_for_term(names[1], text),
-                chunk=_chunk_for_quote(chunks, names[1]),
+                source_quote=quote,
+                chunk=chunk,
+                source_quote_verified=verified,
+                evidence_strategy=f"fallback_parallel:{strategy}",
             )
         )
     return edges
@@ -308,6 +342,8 @@ def _prerequisite_edge(names: list[str], text: str, chunks: list[Chunk]) -> Edge
                     description=f"理解 {target} 需要先掌握 {source}。",
                     source_quote=sentence,
                     chunk=_chunk_for_quote(chunks, sentence),
+                    source_quote_verified=True,
+                    evidence_strategy="fallback_sentence",
                 )
     return None
 
@@ -325,8 +361,8 @@ def _keyword_edge(
         for target in names:
             if source == target:
                 continue
-            sentence = _sentence_with_terms(text, source, target)
-            if sentence and any(marker in sentence for marker in markers):
+            sentence = _sentence_with_terms_and_markers(text, markers, source, target)
+            if sentence:
                 return EdgeDraft(
                     source_name=source,
                     target_name=target,
@@ -334,6 +370,8 @@ def _keyword_edge(
                     description=_description_for_relation(source, target, relation_type),
                     source_quote=sentence,
                     chunk=_chunk_for_quote(chunks, sentence),
+                    source_quote_verified=True,
+                    evidence_strategy="fallback_sentence",
                 )
     return None
 
@@ -370,6 +408,8 @@ def _merge_node(parsed: ParsedTextbook, section: Section, draft: NodeDraft, node
             "chapter": section.title,
             "page": draft.chunk.source_locator.page_start,
             "source_quote": _trim_quote(draft.source_quote),
+            "source_quote_verified": draft.source_quote_verified,
+            "evidence_strategy": draft.evidence_strategy,
             "frequency": 1,
             "section_id": section.id,
         },
@@ -390,9 +430,35 @@ def _build_edge(parsed: ParsedTextbook, draft: EdgeDraft, source_id: str, target
         confidence=0.55,
         metadata={
             "source_quote": _trim_quote(draft.source_quote),
+            "source_quote_verified": draft.source_quote_verified,
+            "evidence_strategy": draft.evidence_strategy,
             "plan3_relation_type": _plan3_relation_name(draft.relation_type),
         },
     )
+
+
+def _ground_evidence(chunks: list[Chunk], quote: str, *terms: str) -> tuple[Chunk, str, bool, str]:
+    clean_quote = _trim_quote(quote)
+    for chunk in chunks:
+        if clean_quote and clean_quote in chunk.text:
+            return chunk, clean_quote, True, "exact_quote"
+
+    for chunk in chunks:
+        sentence = _sentence_with_terms(chunk.text, *[term for term in terms if term])
+        if sentence:
+            return chunk, _trim_quote(sentence), True, "term_sentence"
+
+    for chunk in chunks:
+        for term in terms:
+            if not term:
+                continue
+            sentence = _sentence_with_terms(chunk.text, term)
+            if sentence:
+                return chunk, _trim_quote(sentence), True, "partial_term_sentence"
+
+    chunk = chunks[0]
+    fallback_quote = _trim_quote(chunk.text or clean_quote)
+    return chunk, fallback_quote, False, "fallback_first_chunk"
 
 
 def _chunk_for_quote(chunks: list[Chunk], quote: str) -> Chunk:
@@ -414,6 +480,14 @@ def _sentence_with_terms(text: str, *terms: str) -> str | None:
     for sentence in re.split(r"(?<=[。！？!?；;])", text):
         clean = sentence.strip()
         if clean and all(term in clean for term in terms):
+            return clean
+    return None
+
+
+def _sentence_with_terms_and_markers(text: str, markers: tuple[str, ...], *terms: str) -> str | None:
+    for sentence in re.split(r"(?<=[。！？!?；;])", text):
+        clean = sentence.strip()
+        if clean and all(term in clean for term in terms) and any(marker in clean for marker in markers):
             return clean
     return None
 
@@ -448,8 +522,14 @@ def _relation_from_text(value: str) -> KnowledgeRelationType:
         return KnowledgeRelationType.parallel_with
     if normalized in {"contains", "contain"}:
         return KnowledgeRelationType.contains
+    if normalized in {"is_a", "isa", "is-a"}:
+        return KnowledgeRelationType.is_a
+    if normalized in {"part_of", "partof", "part-of"}:
+        return KnowledgeRelationType.part_of
     if normalized in {"applies_to", "apply"}:
         return KnowledgeRelationType.applies_to
+    if normalized in {"contrasts_with", "contrast", "contrasts"}:
+        return KnowledgeRelationType.contrasts_with
     if normalized in {"causes", "cause"}:
         return KnowledgeRelationType.causes
     if normalized in {"leads_to", "lead_to"}:
@@ -462,8 +542,14 @@ def _relation_from_text(value: str) -> KnowledgeRelationType:
 def _description_for_relation(source: str, target: str, relation_type: KnowledgeRelationType) -> str:
     if relation_type == KnowledgeRelationType.applies_to:
         return f"{source} 可应用或作用于 {target}。"
+    if relation_type == KnowledgeRelationType.is_a:
+        return f"{source} 是或属于 {target}。"
+    if relation_type == KnowledgeRelationType.part_of:
+        return f"{source} 是 {target} 的组成部分或相关组成。"
     if relation_type == KnowledgeRelationType.causes:
         return f"{source} 可能导致或引起 {target}。"
+    if relation_type == KnowledgeRelationType.contrasts_with:
+        return f"{source} 与 {target} 存在差异或对比。"
     if relation_type == KnowledgeRelationType.leads_to:
         return f"{source} 可能进一步导致 {target}。"
     if relation_type == KnowledgeRelationType.explains:
@@ -476,7 +562,10 @@ def _plan3_relation_name(relation_type: KnowledgeRelationType) -> str:
         KnowledgeRelationType.prerequisite_of: "prerequisite",
         KnowledgeRelationType.parallel_with: "parallel",
         KnowledgeRelationType.contains: "contains",
+        KnowledgeRelationType.is_a: "is_a",
+        KnowledgeRelationType.part_of: "part_of",
         KnowledgeRelationType.applies_to: "applies_to",
+        KnowledgeRelationType.contrasts_with: "contrasts_with",
         KnowledgeRelationType.causes: "causes",
         KnowledgeRelationType.leads_to: "leads_to",
         KnowledgeRelationType.explains: "explains",

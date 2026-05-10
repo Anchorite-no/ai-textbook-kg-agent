@@ -16,7 +16,7 @@ from app.models.schemas import (
     ParsedTextbook,
     SourceLocator,
 )
-from app.services.converted_textbook_importer import stable_id
+from app.services.converted_textbook_importer import quote_hash, stable_id
 from app.services.graph_storage import load_graph
 from app.services.knowledge_graph_builder import build_knowledge_graph
 from app.services.layered_graph_storage import load_layered_graph, save_layered_graph
@@ -197,6 +197,20 @@ def _build_document_tree(
                 metadata={"target_ref_type": "Section"},
             ),
         )
+        _append_edge(
+            edges,
+            seen_edge_ids,
+            _layer_edge(
+                parsed.raw_file.id,
+                LayeredGraphLayerType.document_tree,
+                section_node_ids[current.id],
+                section_node_ids[previous.id],
+                "PREVIOUS",
+                previous.source_locator,
+                ref_id=previous.id,
+                metadata={"target_ref_type": "Section"},
+            ),
+        )
 
     for element in parsed.elements:
         node_id = stable_id("layer_node", raw_file.id, LayeredGraphLayerType.document_tree.value, element.id)
@@ -290,6 +304,21 @@ def _build_document_tree(
                     metadata={"target_ref_type": "Chunk"},
                 ),
             )
+            _append_edge(
+                edges,
+                seen_edge_ids,
+                _layer_edge(
+                    parsed.raw_file.id,
+                    LayeredGraphLayerType.document_tree,
+                    chunk_node_ids[current.id],
+                    chunk_node_ids[previous.id],
+                    "PREVIOUS",
+                    previous.source_locator,
+                    ref_id=previous.id,
+                    evidence_chunk_ids=[previous.id],
+                    metadata={"target_ref_type": "Chunk"},
+                ),
+            )
 
     return {
         "raw": {raw_file.id: raw_node_id},
@@ -367,16 +396,27 @@ def _build_evidence_graph(
 ) -> None:
     chunk_by_id = {chunk.id: chunk for chunk in parsed.chunks}
     node_by_id = {node.id: node for node in graph.nodes}
+    source_quote_node_ids: dict[tuple[str, str], str] = {}
 
     for node in graph.nodes:
         source_node_id = concept_node_ids.get(node.id)
         if source_node_id is None:
             continue
+        quote = str(node.metadata.get("source_quote") or node.definition or node.name)
         for chunk_id in node.evidence_chunk_ids:
             chunk = chunk_by_id.get(chunk_id)
             target_node_id = chunk_node_ids.get(chunk_id)
             if chunk is None or target_node_id is None:
                 continue
+            quote_node_id = _ensure_source_quote_node(
+                parsed,
+                chunk,
+                quote,
+                "KnowledgeNode",
+                node.id,
+                source_quote_node_ids,
+                nodes,
+            )
             _append_edge(
                 edges,
                 seen_edge_ids,
@@ -393,11 +433,44 @@ def _build_evidence_graph(
                     metadata={"evidence_for": "KnowledgeNode", "knowledge_node_id": node.id},
                 ),
             )
+            _append_edge(
+                edges,
+                seen_edge_ids,
+                _layer_edge(
+                    parsed.raw_file.id,
+                    LayeredGraphLayerType.evidence_graph,
+                    source_node_id,
+                    quote_node_id,
+                    "HAS_SOURCE_QUOTE",
+                    chunk.source_locator,
+                    ref_id=node.id,
+                    evidence_chunk_ids=[chunk_id],
+                    confidence=node.confidence,
+                    metadata={"evidence_for": "KnowledgeNode", "knowledge_node_id": node.id},
+                ),
+            )
+            _append_edge(
+                edges,
+                seen_edge_ids,
+                _layer_edge(
+                    parsed.raw_file.id,
+                    LayeredGraphLayerType.evidence_graph,
+                    quote_node_id,
+                    target_node_id,
+                    "DERIVED_FROM",
+                    chunk.source_locator,
+                    ref_id=chunk_id,
+                    evidence_chunk_ids=[chunk_id],
+                    confidence=node.confidence,
+                    metadata={"evidence_for": "KnowledgeNode", "knowledge_node_id": node.id},
+                ),
+            )
 
     for edge in graph.edges:
         evidence_node_id = stable_id("layer_node", parsed.raw_file.id, LayeredGraphLayerType.evidence_graph.value, edge.id)
         source_node = node_by_id.get(edge.source_node_id)
         target_node = node_by_id.get(edge.target_node_id)
+        edge_quote = str(edge.metadata.get("source_quote") or edge.description or edge.id)
         nodes.append(
             LayeredGraphNode(
                 id=evidence_node_id,
@@ -457,6 +530,31 @@ def _build_evidence_graph(
             chunk_node_id = chunk_node_ids.get(chunk_id)
             if chunk is None or chunk_node_id is None:
                 continue
+            quote_node_id = _ensure_source_quote_node(
+                parsed,
+                chunk,
+                edge_quote,
+                "KnowledgeEdge",
+                edge.id,
+                source_quote_node_ids,
+                nodes,
+            )
+            _append_edge(
+                edges,
+                seen_edge_ids,
+                _layer_edge(
+                    parsed.raw_file.id,
+                    LayeredGraphLayerType.evidence_graph,
+                    evidence_node_id,
+                    quote_node_id,
+                    "HAS_SOURCE_QUOTE",
+                    chunk.source_locator,
+                    ref_id=edge.id,
+                    evidence_chunk_ids=[chunk_id],
+                    confidence=edge.confidence,
+                    metadata={"evidence_for": "KnowledgeEdge", "knowledge_edge_id": edge.id},
+                ),
+            )
             _append_edge(
                 edges,
                 seen_edge_ids,
@@ -468,6 +566,22 @@ def _build_evidence_graph(
                     "EVIDENCED_BY",
                     chunk.source_locator,
                     ref_id=edge.id,
+                    evidence_chunk_ids=[chunk_id],
+                    confidence=edge.confidence,
+                    metadata={"evidence_for": "KnowledgeEdge", "knowledge_edge_id": edge.id},
+                ),
+            )
+            _append_edge(
+                edges,
+                seen_edge_ids,
+                _layer_edge(
+                    parsed.raw_file.id,
+                    LayeredGraphLayerType.evidence_graph,
+                    quote_node_id,
+                    chunk_node_id,
+                    "DERIVED_FROM",
+                    chunk.source_locator,
+                    ref_id=chunk_id,
                     evidence_chunk_ids=[chunk_id],
                     confidence=edge.confidence,
                     metadata={"evidence_for": "KnowledgeEdge", "knowledge_edge_id": edge.id},
@@ -486,6 +600,44 @@ def _raw_file_locator(parsed: ParsedTextbook) -> SourceLocator:
         page_end=raw_file.page_count,
         quote_hash=raw_file.sha256,
     )
+
+
+def _ensure_source_quote_node(
+    parsed: ParsedTextbook,
+    chunk: Chunk,
+    quote: str,
+    evidence_for: str,
+    ref_id: str,
+    source_quote_node_ids: dict[tuple[str, str], str],
+    nodes: list[LayeredGraphNode],
+) -> str:
+    clean_quote = _trim_quote(quote)
+    key = (chunk.id, quote_hash(clean_quote))
+    existing = source_quote_node_ids.get(key)
+    if existing is not None:
+        return existing
+
+    node_id = stable_id("layer_node", parsed.raw_file.id, LayeredGraphLayerType.evidence_graph.value, "source_quote", chunk.id, key[1])
+    source_quote_node_ids[key] = node_id
+    nodes.append(
+        LayeredGraphNode(
+            id=node_id,
+            layer_type=LayeredGraphLayerType.evidence_graph,
+            label=clean_quote,
+            node_type="SourceQuote",
+            ref_id=ref_id,
+            source_locator=chunk.source_locator,
+            evidence_chunk_ids=[chunk.id],
+            confidence=1.0,
+            metadata={
+                "quote": clean_quote,
+                "quote_hash": key[1],
+                "evidence_for": evidence_for,
+                "chunk_id": chunk.id,
+            },
+        )
+    )
+    return node_id
 
 
 def _layer_edge(
@@ -526,6 +678,10 @@ def _edge_evidence_label(edge: KnowledgeEdge, source_node: KnowledgeNode | None,
     source = source_node.name if source_node else edge.source_node_id
     target = target_node.name if target_node else edge.target_node_id
     return f"{source} {edge.relation_type.value} {target}"
+
+
+def _trim_quote(text: str, limit: int = 180) -> str:
+    return " ".join(text.split())[:limit]
 
 
 def _summarize_layers(nodes: list[LayeredGraphNode], edges: list[LayeredGraphEdge]) -> list[LayeredGraphLayer]:
