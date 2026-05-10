@@ -1,7 +1,37 @@
 # 学科知识整合智能体
 
-当前已完成计划 01，并在计划 02 中跑通多格式解析、统一 JSON 和证据链：
-`RawFile -> DocumentElement -> Section -> Chunk`。
+公开仓库：https://github.com/Anchorite-no/ai-textbook-kg-agent
+
+当前已进入黑客松交付收口状态。后端已跑通多格式解析、统一 JSON、KG、RAG、GraphRAG、跨教材整合、教师修改和报告生成；前端核心按钮已接真实接口。
+
+核心证据链：
+
+```text
+RawFile -> DocumentElement -> Section -> Chunk -> KnowledgeNode / KnowledgeEdge -> RAG Evidence -> IntegrationDecision -> TeacherEdit
+```
+
+## 当前 demo 指标
+
+七本医学教材已全量重跑：
+
+| 指标 | 数值 |
+| --- | ---: |
+| 教材数量 | 7 |
+| 页数 | 2,567 |
+| Section | 2,014 |
+| Chunk | 5,782 |
+| KG 节点 | 16,585 |
+| KG 边 | 45,800 |
+| 孤立节点率 | 3.64% |
+| RAG / GraphRAG / Integration | ready |
+
+交付报告：
+
+- `docs/项目交付总报告.md`
+- `docs/后端能力评估报告.md`
+- `docs/测试与运行报告.md`
+- `docs/演示说明.md`
+- `docs/后端接口对接清单.md`
 
 ## 后端启动
 
