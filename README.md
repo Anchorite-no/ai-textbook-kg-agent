@@ -140,6 +140,7 @@ backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage8_integration.py
 backend\.venv\Scripts\python.exe backend\scripts\benchmark_00_stage8_integration.py
 backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage9_graphrag.py
 backend\.venv\Scripts\python.exe backend\scripts\benchmark_00_stage9_graphrag.py
+backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage10_teacher_edit.py
 ```
 
 导出前后端契约快照：
@@ -250,6 +251,32 @@ Invoke-RestMethod "http://127.0.0.1:8010/api/graphrag/status?raw_file_ids=raw_a,
 
 阶段 9 返回 `citations`、`source_chunks`、`node_hits`、`paths` 和 `decisions`，用于回答定义、教材来源、差异、前置知识、关系路径和整合决策原因。
 
+教师覆盖整合决策：
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/integration/decisions/{decision_id}/override -Body (@{
+  raw_file_ids = @("raw_a", "raw_b")
+  action = "conflict"
+  retained_content = "教师要求保留两种说法，课堂上单独说明差异。"
+  reason = "该合并存在教学风险，需要复核。"
+  confidence = 1.0
+  created_by = "teacher"
+} | ConvertTo-Json) -ContentType "application/json"
+```
+
+教师对话修改：
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/dialogue/messages -Body (@{
+  raw_file_ids = @("raw_a", "raw_b")
+  message = "请把 integration_decision_xxx 改为保留，避免误删课堂重点。"
+  created_by = "teacher"
+  retained_content = "教师要求保留该知识点。"
+} | ConvertTo-Json) -ContentType "application/json"
+```
+
+前端对接接口清单见 `docs\后端接口对接清单.md`。
+
 建立 RAG 证据索引：
 
 ```powershell
@@ -324,3 +351,5 @@ npm run dev
 - `/api/alignment/build` 跨教材术语对齐候选和 ConceptCluster。
 - `/api/integration/build` 跨教材整合与压缩决策。
 - `/api/graphrag/query` GraphRAG 问答，返回引用、知识点、路径和整合决策证据。
+- `/api/integration/decisions/{decision_id}/override` 教师覆盖整合决策。
+- `/api/dialogue/messages` 教师对话修改决策并记录历史。

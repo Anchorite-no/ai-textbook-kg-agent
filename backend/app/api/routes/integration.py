@@ -2,11 +2,20 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
-from app.models.schemas import IntegrationBuildRequest, IntegrationBuildResponse, IntegrationResponse, JobStatus, JobType
+from app.models.schemas import (
+    DecisionOverrideRequest,
+    IntegrationBuildRequest,
+    IntegrationBuildResponse,
+    IntegrationResponse,
+    JobStatus,
+    JobType,
+    TeacherEditApplyResponse,
+)
 from app.services.converted_textbook_importer import stable_id
 from app.services.integration_builder import build_integration
 from app.services.integration_storage import load_integration, load_latest_integration
 from app.services.job_store import job_store
+from app.services.teacher_edit_service import override_integration_decision
 
 
 router = APIRouter(prefix="/integration", tags=["integration"])
@@ -64,3 +73,14 @@ def get_integration(raw_file_ids: str | None = None) -> IntegrationResponse:
             detail={"message": "跨教材整合结果不存在，请先构建", "code": "INTEGRATION_NOT_FOUND", "detail": raw_file_ids},
         )
     return integration
+
+
+@router.post("/decisions/{decision_id}/override", response_model=TeacherEditApplyResponse)
+def override_decision(decision_id: str, payload: DecisionOverrideRequest) -> TeacherEditApplyResponse:
+    try:
+        return override_integration_decision(decision_id, payload)
+    except Exception as exc:  # noqa: BLE001 - normalize stage 10 decision override errors.
+        raise HTTPException(
+            status_code=400,
+            detail={"message": "教师覆盖整合决策失败", "code": "DECISION_OVERRIDE_FAILED", "detail": str(exc)},
+        ) from exc

@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     layered_graph_data_dir: Path = PROJECT_ROOT / "data" / "graphs" / "layers"
     alignment_data_dir: Path = PROJECT_ROOT / "data" / "alignments"
     integration_data_dir: Path = PROJECT_ROOT / "data" / "integrations"
+    teacher_edit_data_dir: Path = PROJECT_ROOT / "data" / "teacher_edits"
     llm_cache_dir: Path = PROJECT_ROOT / "data" / "graphs" / "llm_cache"
     llm_provider: str = "none"
     llm_api_style: str = "responses"
@@ -48,6 +49,7 @@ class Settings(BaseSettings):
         self.layered_graph_data_dir = self._resolve_path(self.layered_graph_data_dir)
         self.alignment_data_dir = self._resolve_path(self.alignment_data_dir)
         self.integration_data_dir = self._resolve_path(self.integration_data_dir)
+        self.teacher_edit_data_dir = self._resolve_path(self.teacher_edit_data_dir)
         self.llm_cache_dir = self._resolve_path(self.llm_cache_dir)
         return self
 

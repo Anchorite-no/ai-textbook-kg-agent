@@ -22,6 +22,7 @@ data/graphs/*
 data/alignments/*
 data/integrations/*
 data/jobs/*
+data/teacher_edits/*
 data/experiments/*
 data/*.jpg
 !data/uploads/.gitkeep
@@ -31,6 +32,7 @@ data/*.jpg
 !data/alignments/.gitkeep
 !data/integrations/.gitkeep
 !data/jobs/.gitkeep
+!data/teacher_edits/.gitkeep
 
 *.sqlite
 *.db

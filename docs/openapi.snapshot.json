@@ -1416,6 +1416,334 @@
         }
       }
     },
+    "/api/integration/decisions/{decision_id}/override": {
+      "post": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Override Decision",
+        "operationId": "override_decision_api_integration_decisions__decision_id__override_post",
+        "parameters": [
+          {
+            "name": "decision_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Decision Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionOverrideRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherEditApplyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/teacher-edits": {
+      "get": {
+        "tags": [
+          "teacher-edits"
+        ],
+        "summary": "List Teacher Edits",
+        "operationId": "list_teacher_edits_api_teacher_edits_get",
+        "parameters": [
+          {
+            "name": "raw_file_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Raw File Ids"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherEditListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "teacher-edits"
+        ],
+        "summary": "Create Teacher Edit",
+        "operationId": "create_teacher_edit_api_teacher_edits_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeacherEditCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherEditApplyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/dialogue/messages": {
+      "get": {
+        "tags": [
+          "dialogue"
+        ],
+        "summary": "List Dialogue Messages",
+        "operationId": "list_dialogue_messages_api_dialogue_messages_get",
+        "parameters": [
+          {
+            "name": "raw_file_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Raw File Ids"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DialogueHistoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "dialogue"
+        ],
+        "summary": "Post Dialogue Message",
+        "operationId": "post_dialogue_message_api_dialogue_messages_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DialogueMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DialogueMessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
     "/api/rag/index": {
       "post": {
         "tags": [
@@ -2600,6 +2928,317 @@
           "member_node_ids"
         ],
         "title": "ConceptCluster"
+      },
+      "DecisionOverrideRequest": {
+        "properties": {
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "action": {
+            "$ref": "#/components/schemas/IntegrationAction"
+          },
+          "retained_content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retained Content"
+          },
+          "removed_redundancy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Removed Redundancy"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "default": 1.0
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "action",
+          "reason"
+        ],
+        "title": "DecisionOverrideRequest"
+      },
+      "DialogueHistoryResponse": {
+        "properties": {
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/DialogueMessage"
+            },
+            "type": "array",
+            "title": "Messages"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "DialogueHistoryResponse"
+      },
+      "DialogueMessage": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "role": {
+            "$ref": "#/components/schemas/DialogueMessageRole"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "teacher_edit_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Teacher Edit Ids"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "role",
+          "content"
+        ],
+        "title": "DialogueMessage"
+      },
+      "DialogueMessageRequest": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "target_decision_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Decision Id"
+          },
+          "override_action": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IntegrationAction"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "retained_content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retained Content"
+          },
+          "removed_redundancy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Removed Redundancy"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "default": 1.0
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "DialogueMessageRequest"
+      },
+      "DialogueMessageResponse": {
+        "properties": {
+          "user_message": {
+            "$ref": "#/components/schemas/DialogueMessage"
+          },
+          "assistant_message": {
+            "$ref": "#/components/schemas/DialogueMessage"
+          },
+          "edits": {
+            "items": {
+              "$ref": "#/components/schemas/TeacherEdit"
+            },
+            "type": "array",
+            "title": "Edits"
+          },
+          "integration": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IntegrationResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "user_message",
+          "assistant_message"
+        ],
+        "title": "DialogueMessageResponse"
+      },
+      "DialogueMessageRole": {
+        "type": "string",
+        "enum": [
+          "teacher",
+          "assistant",
+          "system"
+        ],
+        "title": "DialogueMessageRole"
       },
       "DocumentElement": {
         "properties": {
@@ -4853,6 +5492,244 @@
           "locator_text"
         ],
         "title": "SourceLocator"
+      },
+      "TeacherEdit": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "target_type": {
+            "type": "string",
+            "enum": [
+              "node",
+              "edge",
+              "decision",
+              "cluster",
+              "section",
+              "chunk"
+            ],
+            "title": "Target Type"
+          },
+          "target_id": {
+            "type": "string",
+            "title": "Target Id"
+          },
+          "operation": {
+            "$ref": "#/components/schemas/TeacherEditOperation"
+          },
+          "before": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Before"
+          },
+          "after": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "After"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "affected_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected Ids"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "target_type",
+          "target_id",
+          "operation"
+        ],
+        "title": "TeacherEdit"
+      },
+      "TeacherEditApplyResponse": {
+        "properties": {
+          "edit": {
+            "$ref": "#/components/schemas/TeacherEdit"
+          },
+          "integration": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IntegrationResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IntegrationDecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "edit",
+          "message"
+        ],
+        "title": "TeacherEditApplyResponse"
+      },
+      "TeacherEditCreateRequest": {
+        "properties": {
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "target_type": {
+            "type": "string",
+            "enum": [
+              "node",
+              "edge",
+              "decision",
+              "cluster",
+              "section",
+              "chunk"
+            ],
+            "title": "Target Type"
+          },
+          "target_id": {
+            "type": "string",
+            "title": "Target Id"
+          },
+          "operation": {
+            "$ref": "#/components/schemas/TeacherEditOperation"
+          },
+          "after": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "After"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "target_type",
+          "target_id",
+          "operation"
+        ],
+        "title": "TeacherEditCreateRequest"
+      },
+      "TeacherEditListResponse": {
+        "properties": {
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "edits": {
+            "items": {
+              "$ref": "#/components/schemas/TeacherEdit"
+            },
+            "type": "array",
+            "title": "Edits"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "TeacherEditListResponse"
+      },
+      "TeacherEditOperation": {
+        "type": "string",
+        "enum": [
+          "create_node",
+          "update_node",
+          "delete_node",
+          "split_node",
+          "merge_nodes",
+          "create_edge",
+          "update_edge",
+          "override_decision"
+        ],
+        "title": "TeacherEditOperation"
       },
       "TextbookBatchUploadResponse": {
         "properties": {

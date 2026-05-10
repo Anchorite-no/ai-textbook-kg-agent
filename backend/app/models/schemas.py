@@ -442,6 +442,87 @@ class TeacherEdit(ContractModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class TeacherEditCreateRequest(ContractModel):
+    raw_file_ids: list[str] = Field(default_factory=list)
+    target_type: Literal["node", "edge", "decision", "cluster", "section", "chunk"]
+    target_id: str
+    operation: TeacherEditOperation
+    after: dict[str, Any] = Field(default_factory=dict)
+    reason: str | None = None
+    created_by: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class DecisionOverrideRequest(ContractModel):
+    raw_file_ids: list[str] = Field(default_factory=list)
+    action: IntegrationAction
+    retained_content: str | None = None
+    removed_redundancy: str | None = None
+    reason: str
+    confidence: float = Field(default=1.0, ge=0, le=1)
+    created_by: str | None = None
+    message: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class TeacherEditApplyResponse(ContractModel):
+    edit: TeacherEdit
+    integration: IntegrationResponse | None = None
+    decision: IntegrationDecision | None = None
+    message: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class TeacherEditListResponse(ContractModel):
+    raw_file_ids: list[str] = Field(default_factory=list)
+    edits: list[TeacherEdit] = Field(default_factory=list)
+    count: int = 0
+
+
+class DialogueMessageRole(str, Enum):
+    teacher = "teacher"
+    assistant = "assistant"
+    system = "system"
+
+
+class DialogueMessage(ContractModel):
+    id: str
+    role: DialogueMessageRole
+    content: str
+    raw_file_ids: list[str] = Field(default_factory=list)
+    teacher_edit_ids: list[str] = Field(default_factory=list)
+    created_by: str | None = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class DialogueMessageRequest(ContractModel):
+    message: str
+    raw_file_ids: list[str] = Field(default_factory=list)
+    created_by: str | None = None
+    target_decision_id: str | None = None
+    override_action: IntegrationAction | None = None
+    retained_content: str | None = None
+    removed_redundancy: str | None = None
+    reason: str | None = None
+    confidence: float = Field(default=1.0, ge=0, le=1)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class DialogueMessageResponse(ContractModel):
+    user_message: DialogueMessage
+    assistant_message: DialogueMessage
+    edits: list[TeacherEdit] = Field(default_factory=list)
+    integration: IntegrationResponse | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class DialogueHistoryResponse(ContractModel):
+    raw_file_ids: list[str] = Field(default_factory=list)
+    messages: list[DialogueMessage] = Field(default_factory=list)
+    count: int = 0
+
+
 class RetrievalEvidence(ContractModel):
     id: str
     query: str
