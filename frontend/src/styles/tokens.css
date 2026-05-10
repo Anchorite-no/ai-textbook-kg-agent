@@ -1,0 +1,120 @@
+/* 设计令牌：颜色 / 字体 / 圆角 / 阴影 / 时长 / 缓动 / z-index
+ * 所有横切的视觉决定都从这里出去；组件不写 raw hex / px。
+ * 与 plan 16 §8 + plan 15 §5 一致。 */
+
+:root {
+  /* ---------- 表面 ---------- */
+  --surface-app:        #f4f6f8;
+  --surface-card:       #ffffff;
+  --surface-input:      #f1f4f7;
+  --surface-muted:      #eef1f4;
+  --surface-overlay:    rgba(255, 255, 255, 0.86);
+  --surface-scrim:      rgba(15, 23, 42, 0.45);
+
+  /* ---------- 文本 ---------- */
+  --text-strong:        #0f172a;
+  --text-default:       #1f2937;
+  --text-muted:         #64748b;
+  --text-subtle:        #94a3b8;
+  --text-inverse:       #ffffff;
+
+  /* ---------- 主色（teal）---------- */
+  --brand-50:           #ccfbf1;
+  --brand-100:          #99f6e4;
+  --brand-500:          #14b8a6;
+  --brand-600:          #0d9488;
+  --brand-700:          #0f766e;
+
+  /* ---------- 状态 ---------- */
+  --status-pending:     #94a3b8;
+  --status-running:     #06b6d4;
+  --status-success:     #10b981;
+  --status-warning:     #f59e0b;
+  --status-error:       #ef4444;
+
+  /* ---------- 教材染色（循环 8 色）---------- */
+  --book-1:             #14b8a6;
+  --book-2:             #6366f1;
+  --book-3:             #f97316;
+  --book-4:             #84cc16;
+  --book-5:             #ec4899;
+  --book-6:             #0ea5e9;
+  --book-7:             #a855f7;
+  --book-8:             #f43f5e;
+
+  /* ---------- 边框 ---------- */
+  --border-soft:        #e5e7eb;
+  --border-strong:      #cbd5e1;
+  --grid-line:          rgba(15, 23, 42, 0.035);
+
+  /* ---------- 字体 ---------- */
+  --font-sans:          "Inter", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  --font-mono:          "Geist Mono", "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* ---------- 圆角 ---------- */
+  --radius-control:     6px;
+  --radius-card:        8px;
+  --radius-pill:        999px;
+
+  /* ---------- 阴影 ---------- */
+  --shadow-card:        0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-overlay:     0 4px 12px rgba(15, 23, 42, 0.08), 0 8px 24px rgba(15, 23, 42, 0.10);
+  --shadow-modal:       0 16px 48px rgba(15, 23, 42, 0.18);
+
+  /* ---------- 焦点环 ---------- */
+  --focus-ring:         0 0 0 2px rgba(20, 184, 166, 0.55);
+  --focus-offset:       2px;
+
+  /* ---------- 时长（plan 16 §5.1）---------- */
+  --d-micro:            150ms;
+  --d-fast:             200ms;
+  --d-base:             240ms;
+  --d-slow:             320ms;
+  --d-graph:            100ms;
+
+  /* ---------- 缓动 ---------- */
+  --ease-standard:      cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-decelerate:    cubic-bezier(0, 0, 0.2, 1);
+  --ease-accelerate:    cubic-bezier(0.4, 0, 1, 1);
+  --ease-emphasized:    cubic-bezier(0.76, 0, 0.24, 1);
+
+  /* ---------- z-index ---------- */
+  --z-base:             0;
+  --z-sticky:           10;
+  --z-dropdown:         100;
+  --z-drawer:           200;
+  --z-modal:            300;
+  --z-toast:            400;
+  --z-tooltip:          500;
+
+  /* ---------- 布局尺寸 ---------- */
+  --topbar-height:      56px;
+  --left-default:       320px;
+  --left-collapsed:     56px;
+  --left-min:           240px;
+  --left-max:           480px;
+  --right-default:      420px;
+  --right-min:          360px;
+  --right-max:          560px;
+  --center-min:         480px;
+}
+
+/* dark 模式 token 占位（MVP 不开启，仅预留） */
+:root[data-theme="dark"] {
+  --surface-app:        #0b1120;
+  --surface-card:       #111827;
+  --surface-input:      #1f2937;
+  --surface-muted:      #1a2433;
+  --surface-overlay:    rgba(17, 24, 39, 0.86);
+  --text-strong:        #f8fafc;
+  --text-default:       #e2e8f0;
+  --text-muted:         #94a3b8;
+  --text-subtle:        #64748b;
+  --text-inverse:       #0f172a;
+  --border-soft:        #1f2937;
+  --border-strong:      #334155;
+  --grid-line:          rgba(226, 232, 240, 0.04);
+  --shadow-card:        0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-overlay:     0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-modal:       0 16px 48px rgba(0, 0, 0, 0.6);
+}
