@@ -36,6 +36,13 @@ export function IntegrationPanel() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["integration"] });
       toastStore.push({ tone: "success", title: "整合结果已生成" });
+    },
+    onError: (err) => {
+      toastStore.push({
+        tone: "error",
+        title: "跨教材构建失败",
+        description: err instanceof Error ? err.message : "请确认至少两本教材已经完成 KG 构建。"
+      });
     }
   });
 

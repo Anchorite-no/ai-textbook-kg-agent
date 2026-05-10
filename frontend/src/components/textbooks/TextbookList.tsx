@@ -16,15 +16,16 @@ export interface TextbookListProps {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onDelete?: (id: string) => void;
+  height?: number;
 }
 
-export function TextbookList({ textbooks, selectedId, onSelect, onDelete }: TextbookListProps) {
+export function TextbookList({ textbooks, selectedId, onSelect, onDelete, height = 400 }: TextbookListProps) {
   if (textbooks.length === 0) return null;
 
   return (
     <div className="flex-1 min-h-0">
       <List
-        height={400}
+        height={height}
         itemCount={textbooks.length}
         itemSize={72}
         width="100%"

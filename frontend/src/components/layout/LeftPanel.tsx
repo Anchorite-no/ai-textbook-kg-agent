@@ -11,6 +11,7 @@ import { workflowsApi } from "@/api/workflows";
 import { toastStore } from "@/components/layout/ToastViewport";
 import { UploadZone } from "@/components/textbooks/UploadZone";
 import { TextbookList } from "@/components/textbooks/TextbookList";
+import { ChapterTree } from "@/components/textbooks/ChapterTree";
 
 export function LeftPanel() {
   const queryClient = useQueryClient();
@@ -120,7 +121,7 @@ export function LeftPanel() {
           </Tooltip>
         </div>
       </div>
-      <div className="scroll-region flex flex-col">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         {showUpload ? (
           <UploadZone
             onUpload={handleUpload}
@@ -143,13 +144,26 @@ export function LeftPanel() {
             />
           </div>
         ) : (
-          <>
-            <TextbookList
-              textbooks={textbooks}
-              selectedId={selectedTextbookId}
-              onSelect={setSelectedTextbookId}
-            />
-          </>
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+            <div className="basis-1/2 min-h-[180px] shrink-0 border-b border-border-soft overflow-hidden">
+              <TextbookList
+                textbooks={textbooks}
+                selectedId={selectedTextbookId}
+                onSelect={setSelectedTextbookId}
+                height={260}
+              />
+            </div>
+            <div className="basis-1/2 min-h-0 flex flex-col">
+              <div className="px-3 py-2 bg-surface-card border-b border-border-soft shrink-0">
+                <h3 className="text-meta uppercase tracking-wide text-text-muted font-medium">
+                  章节
+                </h3>
+              </div>
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <ChapterTree textbookId={selectedTextbookId} />
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </>
