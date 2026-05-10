@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     converted_textbooks_dir: Path = PROJECT_ROOT / "materials" / "converted_textbooks"
     parsed_data_dir: Path = PROJECT_ROOT / "data" / "parsed"
     upload_dir: Path = PROJECT_ROOT / "data" / "uploads"
+    upload_sessions_dir: Path = PROJECT_ROOT / "data" / "uploads" / "sessions"
     cors_origins: list[str] = ["http://127.0.0.1:5173", "http://localhost:5173"]
 
     model_config = SettingsConfigDict(
@@ -26,6 +27,7 @@ class Settings(BaseSettings):
         self.converted_textbooks_dir = self._resolve_path(self.converted_textbooks_dir)
         self.parsed_data_dir = self._resolve_path(self.parsed_data_dir)
         self.upload_dir = self._resolve_path(self.upload_dir)
+        self.upload_sessions_dir = self._resolve_path(self.upload_sessions_dir)
         return self
 
     @staticmethod

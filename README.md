@@ -44,6 +44,24 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/textbooks/upload-b
 当前计划 02 支持：`txt`、`md`、`markdown`、`pdf`、`docx`、`xlsx`、`csv`、`tsv`、`pptx`。
 旧版 `doc/xls/ppt` 暂不直接解析，会返回清晰错误，后续接 LibreOffice 转换兜底。
 
+大文件分片上传：
+
+```powershell
+$body = @{
+  filename = "large_sample.md"
+  total_size_bytes = 1024
+  total_chunks = 4
+  chunk_size_bytes = 256
+  sha256 = "完整文件 sha256"
+  content_type = "text/markdown"
+  parse_on_complete = $true
+} | ConvertTo-Json
+
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/uploads/sessions -Body $body -ContentType "application/json"
+```
+
+之后按 `PUT /api/uploads/sessions/{session_id}/chunks/{chunk_index}` 上传分片，最后调用 `POST /api/uploads/sessions/{session_id}/complete` 合并并解析。
+
 查看已解析教材：
 
 ```powershell

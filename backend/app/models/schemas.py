@@ -265,6 +265,7 @@ class JobType(str, Enum):
     textbook_upload = "textbook_upload"
     textbook_batch_upload = "textbook_batch_upload"
     textbook_parse = "textbook_parse"
+    large_file_upload = "large_file_upload"
     converted_textbook_import = "converted_textbook_import"
 
 
@@ -300,6 +301,61 @@ class TextbookBatchUploadResponse(ContractModel):
     total_count: int
     success_count: int
     failed_count: int
+
+
+class UploadSessionStatus(str, Enum):
+    created = "created"
+    uploading = "uploading"
+    assembling = "assembling"
+    parsing = "parsing"
+    completed = "completed"
+    failed = "failed"
+
+
+class UploadSessionCreateRequest(ContractModel):
+    filename: str
+    total_size_bytes: int = Field(ge=1)
+    total_chunks: int = Field(ge=1)
+    chunk_size_bytes: int = Field(ge=1)
+    sha256: str | None = None
+    content_type: str | None = None
+    parse_on_complete: bool = True
+
+
+class UploadSessionRecord(ContractModel):
+    id: str
+    filename: str
+    total_size_bytes: int
+    total_chunks: int
+    chunk_size_bytes: int
+    sha256: str | None = None
+    content_type: str | None = None
+    parse_on_complete: bool = True
+    status: UploadSessionStatus = UploadSessionStatus.created
+    uploaded_chunks: list[int] = Field(default_factory=list)
+    missing_chunks: list[int] = Field(default_factory=list)
+    received_bytes: int = 0
+    upload_progress: int = Field(ge=0, le=100, default=0)
+    parse_progress: int = Field(ge=0, le=100, default=0)
+    job_id: str | None = None
+    assembled_path: str | None = None
+    raw_file_id: str | None = None
+    parsed_output_path: str | None = None
+    error: str | None = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class UploadChunkResponse(ContractModel):
+    session: UploadSessionRecord
+    chunk_index: int
+    received_bytes: int
+
+
+class UploadSessionCompleteResponse(ContractModel):
+    session: UploadSessionRecord
+    job: JobRecord
+    parsed_upload: TextbookUploadResponse | None = None
 
 
 class TextbookSummary(ContractModel):

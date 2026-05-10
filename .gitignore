@@ -17,9 +17,11 @@ frontend/.vite/
 data/uploads/*
 data/parsed/*
 data/indexes/*
+data/graphs/*
 !data/uploads/.gitkeep
 !data/parsed/.gitkeep
 !data/indexes/.gitkeep
+!data/graphs/.gitkeep
 
 *.sqlite
 *.db

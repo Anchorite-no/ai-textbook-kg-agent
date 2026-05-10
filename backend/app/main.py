@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.api.routes import health, jobs, textbooks
+from app.api.routes import health, jobs, textbooks, uploads
 from app.core.config import settings
 from app.models.schemas import ApiErrorResponse
 
@@ -33,6 +33,7 @@ def create_app() -> FastAPI:
     )
     app.include_router(health.router, prefix=settings.api_prefix)
     app.include_router(textbooks.router, prefix=settings.api_prefix)
+    app.include_router(uploads.router, prefix=settings.api_prefix)
     app.include_router(jobs.router, prefix=settings.api_prefix)
     return app
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from collections.abc import Iterable
@@ -26,8 +27,10 @@ def main() -> None:
 
     settings.parsed_data_dir.mkdir(parents=True, exist_ok=True)
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
+    settings.upload_sessions_dir.mkdir(parents=True, exist_ok=True)
     before_parsed = set(settings.parsed_data_dir.glob("raw_*.json"))
     before_uploads = set(settings.upload_dir.glob("upload_*"))
+    before_sessions = set(settings.upload_sessions_dir.glob("upload_session_*"))
 
     try:
         with TemporaryDirectory() as tmp:
@@ -39,6 +42,7 @@ def main() -> None:
         if not args.keep_output:
             cleanup_new_files(settings.parsed_data_dir.glob("raw_*.json"), before_parsed)
             cleanup_new_files(settings.upload_dir.glob("upload_*"), before_uploads)
+            cleanup_new_dirs(settings.upload_sessions_dir.glob("upload_session_*"), before_sessions)
 
     print("phase2 smoke ok")
 
@@ -193,6 +197,49 @@ def run_api_smoke(samples: dict[str, Path]) -> None:
     assert job.status_code == 200, job.text
     assert job.json()["status"] == "completed"
 
+    run_chunk_upload_smoke(client)
+
+
+def run_chunk_upload_smoke(client: TestClient) -> None:
+    content = "# 第一章 大文件\n动作电位是细胞膜电位快速变化。\n静息电位是动作电位的基础。\n".encode("utf-8")
+    chunk_size = 24
+    chunks = [content[index : index + chunk_size] for index in range(0, len(content), chunk_size)]
+    create = client.post(
+        "/api/uploads/sessions",
+        json={
+            "filename": "large_sample.md",
+            "total_size_bytes": len(content),
+            "total_chunks": len(chunks),
+            "chunk_size_bytes": chunk_size,
+            "sha256": hashlib.sha256(content).hexdigest(),
+            "content_type": "text/markdown",
+            "parse_on_complete": True,
+        },
+    )
+    assert create.status_code == 200, create.text
+    session = create.json()
+    session_id = session["id"]
+    assert session["missing_chunks"] == list(range(len(chunks))), session
+
+    for index in reversed(range(len(chunks))):
+        response = client.put(
+            f"/api/uploads/sessions/{session_id}/chunks/{index}",
+            files={"file": (f"chunk_{index}.part", chunks[index], "application/octet-stream")},
+        )
+        assert response.status_code == 200, response.text
+
+    status = client.get(f"/api/uploads/sessions/{session_id}")
+    assert status.status_code == 200, status.text
+    assert status.json()["upload_progress"] == 100, status.json()
+
+    complete = client.post(f"/api/uploads/sessions/{session_id}/complete")
+    assert complete.status_code == 200, complete.text
+    payload = complete.json()
+    assert payload["session"]["status"] == "completed", payload
+    assert payload["job"]["status"] == "completed", payload
+    assert payload["parsed_upload"]["parsed_textbook"]["raw_file"]["format"] == "md", payload
+    assert_source_locators("md", payload["parsed_upload"]["parsed_textbook"])
+
 
 def assert_source_locators(file_format: str, parsed_payload: dict[str, object]) -> None:
     chunks = parsed_payload["chunks"]
@@ -230,6 +277,15 @@ def cleanup_new_files(paths: Iterable[Path], before: set[Path]) -> None:
             path.unlink()
         except FileNotFoundError:
             pass
+
+
+def cleanup_new_dirs(paths: Iterable[Path], before: set[Path]) -> None:
+    import shutil
+
+    for path in paths:
+        if path in before:
+            continue
+        shutil.rmtree(path, ignore_errors=True)
 
 
 if __name__ == "__main__":
