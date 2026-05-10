@@ -174,6 +174,57 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/graph/build": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Build Graph */
+        readonly post: operations["build_graph_api_graph_build_post"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/graph": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get Graph */
+        readonly get: operations["get_graph_api_graph_get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/graph/nodes/{node_id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get Graph Node */
+        readonly get: operations["get_graph_node_api_graph_nodes__node_id__get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/jobs/{job_id}": {
         readonly parameters: {
             readonly query?: never;
@@ -275,6 +326,76 @@ export interface components {
          * @enum {string}
          */
         readonly DocumentElementType: "heading" | "paragraph" | "table" | "figure" | "list" | "page" | "slide" | "sheet" | "note";
+        /** GraphBuildRequest */
+        readonly GraphBuildRequest: {
+            /** Raw File Id */
+            readonly raw_file_id: string;
+            /** Section Ids */
+            readonly section_ids?: readonly string[];
+            /**
+             * Force Rebuild
+             * @default false
+             */
+            readonly force_rebuild: boolean;
+            /**
+             * Max Sections
+             * @default 20
+             */
+            readonly max_sections: number;
+            /**
+             * Max Nodes Per Section
+             * @default 8
+             */
+            readonly max_nodes_per_section: number;
+            /**
+             * Use Llm
+             * @default true
+             */
+            readonly use_llm: boolean;
+        };
+        /** GraphBuildResponse */
+        readonly GraphBuildResponse: {
+            readonly job: components["schemas"]["JobRecord"];
+            /** Raw File Id */
+            readonly raw_file_id: string;
+            /** Graph Output Path */
+            readonly graph_output_path: string;
+            readonly graph: components["schemas"]["GraphResponse"];
+        };
+        /** GraphNodeDetailResponse */
+        readonly GraphNodeDetailResponse: {
+            readonly node: components["schemas"]["KnowledgeNode"];
+            /** Edges */
+            readonly edges?: readonly components["schemas"]["KnowledgeEdge"][];
+            /** Evidence Chunks */
+            readonly evidence_chunks?: readonly components["schemas"]["Chunk"][];
+            /** Graph Id */
+            readonly graph_id: string;
+            /** Raw File Id */
+            readonly raw_file_id: string;
+        };
+        /** GraphResponse */
+        readonly GraphResponse: {
+            /** Id */
+            readonly id: string;
+            /** Raw File Id */
+            readonly raw_file_id: string;
+            /** Title */
+            readonly title: string;
+            /** Nodes */
+            readonly nodes: readonly components["schemas"]["KnowledgeNode"][];
+            /** Edges */
+            readonly edges: readonly components["schemas"]["KnowledgeEdge"][];
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            readonly generated_at?: string;
+            /** Metadata */
+            readonly metadata?: {
+                readonly [key: string]: unknown;
+            };
+        };
         /** HealthResponse */
         readonly HealthResponse: {
             /**
@@ -334,7 +455,65 @@ export interface components {
          * JobType
          * @enum {string}
          */
-        readonly JobType: "textbook_upload" | "textbook_batch_upload" | "textbook_parse" | "large_file_upload" | "converted_textbook_import";
+        readonly JobType: "textbook_upload" | "textbook_batch_upload" | "textbook_parse" | "large_file_upload" | "graph_build" | "converted_textbook_import";
+        /** KnowledgeEdge */
+        readonly KnowledgeEdge: {
+            /** Id */
+            readonly id: string;
+            /** Source Node Id */
+            readonly source_node_id: string;
+            /** Target Node Id */
+            readonly target_node_id: string;
+            readonly relation_type: components["schemas"]["KnowledgeRelationType"];
+            /** Description */
+            readonly description?: string | null;
+            readonly source_locator: components["schemas"]["SourceLocator"];
+            /** Evidence Chunk Ids */
+            readonly evidence_chunk_ids?: readonly string[];
+            /**
+             * Confidence
+             * @default 0
+             */
+            readonly confidence: number;
+            /** Metadata */
+            readonly metadata?: {
+                readonly [key: string]: unknown;
+            };
+        };
+        /** KnowledgeNode */
+        readonly KnowledgeNode: {
+            /** Id */
+            readonly id: string;
+            /** Name */
+            readonly name: string;
+            readonly node_type: components["schemas"]["KnowledgeNodeType"];
+            /** Definition */
+            readonly definition?: string | null;
+            /** Aliases */
+            readonly aliases?: readonly string[];
+            readonly source_locator: components["schemas"]["SourceLocator"];
+            /** Evidence Chunk Ids */
+            readonly evidence_chunk_ids?: readonly string[];
+            /**
+             * Confidence
+             * @default 0
+             */
+            readonly confidence: number;
+            /** Metadata */
+            readonly metadata?: {
+                readonly [key: string]: unknown;
+            };
+        };
+        /**
+         * KnowledgeNodeType
+         * @enum {string}
+         */
+        readonly KnowledgeNodeType: "Concept" | "Term" | "Mechanism" | "Process" | "Structure" | "Function" | "Disease" | "Symptom" | "Pathogen" | "Diagnosis" | "Treatment" | "Experiment" | "Example";
+        /**
+         * KnowledgeRelationType
+         * @enum {string}
+         */
+        readonly KnowledgeRelationType: "ALIAS_OF" | "SAME_AS" | "IS_A" | "PART_OF" | "CONTAINS" | "PARALLEL_WITH" | "PREREQUISITE_OF" | "CAUSES" | "LEADS_TO" | "APPLIES_TO" | "CONTRASTS_WITH" | "EXPLAINS" | "EVIDENCED_BY" | "MENTIONED_IN" | "REFINES" | "CONFLICTS_WITH";
         /** ParsedTextbook */
         readonly ParsedTextbook: {
             /** Id */
@@ -1103,6 +1282,157 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": components["schemas"]["UploadSessionCompleteResponse"];
+                };
+            };
+            /** @description Bad Request */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    readonly build_graph_api_graph_build_post: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["GraphBuildRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["GraphBuildResponse"];
+                };
+            };
+            /** @description Bad Request */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    readonly get_graph_api_graph_get: {
+        readonly parameters: {
+            readonly query?: {
+                readonly mode?: "single";
+                readonly raw_file_id?: string | null;
+                readonly top_n?: number;
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["GraphResponse"];
+                };
+            };
+            /** @description Bad Request */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    readonly get_graph_node_api_graph_nodes__node_id__get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly node_id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["GraphNodeDetailResponse"];
                 };
             };
             /** @description Bad Request */
