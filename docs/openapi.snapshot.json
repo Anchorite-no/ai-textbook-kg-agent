@@ -1026,6 +1026,136 @@
         }
       }
     },
+    "/api/kg/layers/build": {
+      "post": {
+        "tags": [
+          "kg"
+        ],
+        "summary": "Build Layered Kg",
+        "operationId": "build_layered_kg_api_kg_layers_build_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LayeredGraphBuildRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LayeredGraphBuildResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kg/layers": {
+      "get": {
+        "tags": [
+          "kg"
+        ],
+        "summary": "Get Layered Kg",
+        "operationId": "get_layered_kg_api_kg_layers_get",
+        "parameters": [
+          {
+            "name": "raw_file_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Raw File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LayeredGraphResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
     "/api/rag/index": {
       "post": {
         "tags": [
@@ -1947,6 +2077,7 @@
           "textbook_pipeline",
           "large_file_upload",
           "graph_build",
+          "layered_kg_build",
           "rag_index",
           "converted_textbook_import"
         ],
@@ -2118,6 +2249,322 @@
           "CONFLICTS_WITH"
         ],
         "title": "KnowledgeRelationType"
+      },
+      "LayeredGraphBuildRequest": {
+        "properties": {
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          },
+          "force_rebuild": {
+            "type": "boolean",
+            "title": "Force Rebuild",
+            "default": false
+          },
+          "build_missing_concept_graph": {
+            "type": "boolean",
+            "title": "Build Missing Concept Graph",
+            "default": true
+          },
+          "max_sections": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Max Sections",
+            "default": 20
+          },
+          "max_nodes_per_section": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Max Nodes Per Section",
+            "default": 8
+          },
+          "use_llm": {
+            "type": "boolean",
+            "title": "Use Llm",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "raw_file_id"
+        ],
+        "title": "LayeredGraphBuildRequest"
+      },
+      "LayeredGraphBuildResponse": {
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/JobRecord"
+          },
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          },
+          "layered_graph_output_path": {
+            "type": "string",
+            "title": "Layered Graph Output Path"
+          },
+          "layered_graph": {
+            "$ref": "#/components/schemas/LayeredGraphResponse"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "job",
+          "raw_file_id",
+          "layered_graph_output_path",
+          "layered_graph"
+        ],
+        "title": "LayeredGraphBuildResponse"
+      },
+      "LayeredGraphEdge": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "layer_type": {
+            "$ref": "#/components/schemas/LayeredGraphLayerType"
+          },
+          "source_node_id": {
+            "type": "string",
+            "title": "Source Node Id"
+          },
+          "target_node_id": {
+            "type": "string",
+            "title": "Target Node Id"
+          },
+          "relation_type": {
+            "type": "string",
+            "title": "Relation Type"
+          },
+          "ref_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref Id"
+          },
+          "source_locator": {
+            "$ref": "#/components/schemas/SourceLocator"
+          },
+          "evidence_chunk_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Chunk Ids"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "default": 1.0
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "layer_type",
+          "source_node_id",
+          "target_node_id",
+          "relation_type",
+          "source_locator"
+        ],
+        "title": "LayeredGraphEdge"
+      },
+      "LayeredGraphLayer": {
+        "properties": {
+          "layer_type": {
+            "$ref": "#/components/schemas/LayeredGraphLayerType"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LayeredGraphLayerStatus"
+          },
+          "node_count": {
+            "type": "integer",
+            "title": "Node Count",
+            "default": 0
+          },
+          "edge_count": {
+            "type": "integer",
+            "title": "Edge Count",
+            "default": 0
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "layer_type",
+          "display_name",
+          "status"
+        ],
+        "title": "LayeredGraphLayer"
+      },
+      "LayeredGraphLayerStatus": {
+        "type": "string",
+        "enum": [
+          "ready",
+          "empty",
+          "reserved"
+        ],
+        "title": "LayeredGraphLayerStatus"
+      },
+      "LayeredGraphLayerType": {
+        "type": "string",
+        "enum": [
+          "document_tree",
+          "concept_kg",
+          "alias_alignment",
+          "evidence_graph",
+          "integration_decision",
+          "teacher_edit",
+          "graphrag_retrieval"
+        ],
+        "title": "LayeredGraphLayerType"
+      },
+      "LayeredGraphNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "layer_type": {
+            "$ref": "#/components/schemas/LayeredGraphLayerType"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "node_type": {
+            "type": "string",
+            "title": "Node Type"
+          },
+          "ref_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref Id"
+          },
+          "source_locator": {
+            "$ref": "#/components/schemas/SourceLocator"
+          },
+          "evidence_chunk_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Chunk Ids"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "default": 1.0
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "layer_type",
+          "label",
+          "node_type",
+          "source_locator"
+        ],
+        "title": "LayeredGraphNode"
+      },
+      "LayeredGraphResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/components/schemas/LayeredGraphLayer"
+            },
+            "type": "array",
+            "title": "Layers"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/LayeredGraphNode"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/LayeredGraphEdge"
+            },
+            "type": "array",
+            "title": "Edges"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "raw_file_id",
+          "title",
+          "layers",
+          "nodes",
+          "edges"
+        ],
+        "title": "LayeredGraphResponse"
       },
       "ParsedTextbook": {
         "properties": {

@@ -99,13 +99,16 @@ Invoke-RestMethod http://127.0.0.1:8010/api/textbooks
 Invoke-RestMethod -Method Post http://127.0.0.1:8010/api/textbooks/{raw_file_id}/parse
 ```
 
-计划 02 后端烟测：
+后端阶段烟测：
 
 ```powershell
 cd D:\Hackathon
 $env:PYTHONPATH=(Resolve-Path backend).Path
 backend\.venv\Scripts\python.exe backend\scripts\smoke_phase2.py
 backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage3_async.py
+backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage4_rag.py
+backend\.venv\Scripts\python.exe backend\scripts\smoke_phase3.py
+backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage6_layered_kg.py
 ```
 
 导出前后端契约快照：
@@ -138,6 +141,25 @@ Invoke-RestMethod "http://127.0.0.1:8010/api/graph/nodes/{node_id}"
 ```
 
 未配置 LLM 时，后端会使用确定性兜底抽取，便于 demo 和测试继续推进。
+
+构建多层 KG：
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/kg/layers/build -Body (@{
+  raw_file_id = "raw_xxx"
+  force_rebuild = $false
+  build_missing_concept_graph = $true
+  use_llm = $true
+} | ConvertTo-Json) -ContentType "application/json"
+```
+
+读取多层 KG：
+
+```powershell
+Invoke-RestMethod "http://127.0.0.1:8010/api/kg/layers?raw_file_id=raw_xxx"
+```
+
+当前阶段 6 只生成 `document_tree`、`concept_kg`、`evidence_graph`，其余层保持 reserved，等待后续阶段。
 
 建立 RAG 证据索引：
 
@@ -183,3 +205,6 @@ npm run dev
 - 上传常见教学资料并输出统一 JSON 到 `data/parsed`。
 - `/api/textbooks/upload-batch` 批量上传，单文件失败不会阻断其它文件。
 - `/api/textbooks/{raw_file_id}/parse` 对已保存上传文件重新解析。
+- `/api/rag/index`、`/api/rag/query` 本地 BM25 证据索引。
+- `/api/graph/build` 单本教材知识点和关系抽取。
+- `/api/kg/layers/build` 多层 KG 基础构建。

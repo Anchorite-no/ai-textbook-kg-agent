@@ -192,6 +192,76 @@ class GraphNodeDetailResponse(ContractModel):
     raw_file_id: str
 
 
+class LayeredGraphLayerType(str, Enum):
+    document_tree = "document_tree"
+    concept_kg = "concept_kg"
+    alias_alignment = "alias_alignment"
+    evidence_graph = "evidence_graph"
+    integration_decision = "integration_decision"
+    teacher_edit = "teacher_edit"
+    graphrag_retrieval = "graphrag_retrieval"
+
+
+class LayeredGraphLayerStatus(str, Enum):
+    ready = "ready"
+    empty = "empty"
+    reserved = "reserved"
+
+
+class LayeredGraphLayer(ContractModel):
+    layer_type: LayeredGraphLayerType
+    display_name: str
+    status: LayeredGraphLayerStatus
+    node_count: int = 0
+    edge_count: int = 0
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class LayeredGraphNode(ContractModel):
+    id: str
+    layer_type: LayeredGraphLayerType
+    label: str
+    node_type: str
+    ref_id: str | None = None
+    source_locator: SourceLocator
+    evidence_chunk_ids: list[str] = Field(default_factory=list)
+    confidence: float = Field(ge=0, le=1, default=1.0)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class LayeredGraphEdge(ContractModel):
+    id: str
+    layer_type: LayeredGraphLayerType
+    source_node_id: str
+    target_node_id: str
+    relation_type: str
+    ref_id: str | None = None
+    source_locator: SourceLocator
+    evidence_chunk_ids: list[str] = Field(default_factory=list)
+    confidence: float = Field(ge=0, le=1, default=1.0)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class LayeredGraphResponse(ContractModel):
+    id: str
+    raw_file_id: str
+    title: str
+    layers: list[LayeredGraphLayer]
+    nodes: list[LayeredGraphNode]
+    edges: list[LayeredGraphEdge]
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class LayeredGraphBuildRequest(ContractModel):
+    raw_file_id: str
+    force_rebuild: bool = False
+    build_missing_concept_graph: bool = True
+    max_sections: int = Field(default=20, ge=1, le=200)
+    max_nodes_per_section: int = Field(default=8, ge=1, le=30)
+    use_llm: bool = True
+
+
 class ConceptCluster(ContractModel):
     id: str
     canonical_name: str
@@ -337,6 +407,7 @@ class JobType(str, Enum):
     textbook_pipeline = "textbook_pipeline"
     large_file_upload = "large_file_upload"
     graph_build = "graph_build"
+    layered_kg_build = "layered_kg_build"
     rag_index = "rag_index"
     converted_textbook_import = "converted_textbook_import"
 
@@ -388,6 +459,13 @@ class GraphBuildResponse(ContractModel):
     raw_file_id: str
     graph_output_path: str
     graph: GraphResponse
+
+
+class LayeredGraphBuildResponse(ContractModel):
+    job: JobRecord
+    raw_file_id: str
+    layered_graph_output_path: str
+    layered_graph: LayeredGraphResponse
 
 
 class RagIndexResponse(ContractModel):
