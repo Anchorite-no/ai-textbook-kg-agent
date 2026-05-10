@@ -6,14 +6,16 @@ import { useRawFileContext } from "@/hooks/useRawFileContext";
 export function useGraphQuery() {
   const mode = useUIStore((s) => s.graphMode);
   const topN = useUIStore((s) => s.graphTopN);
+  const displayMode = useUIStore((s) => s.graphDisplayMode);
   const { selectedTextbookId, rawFileIds } = useRawFileContext();
+  const effectiveTopN = displayMode === "core" ? Math.min(topN, 220) : Math.max(topN, 420);
   return useQuery({
-    queryKey: ["graph", mode, selectedTextbookId, rawFileIds.join(","), topN],
+    queryKey: ["graph", mode, displayMode, selectedTextbookId, rawFileIds.join(","), effectiveTopN],
     queryFn: () => graphApi.fetchGraph({
       mode,
       rawFileId: selectedTextbookId,
       rawFileIds,
-      topN
+      topN: effectiveTopN
     }),
     staleTime: 0
   });

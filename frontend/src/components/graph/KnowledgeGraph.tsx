@@ -189,6 +189,7 @@ export function KnowledgeGraph({
       .attr("fill", "var(--text-default)")
       .attr("pointer-events", "none")
       .attr("user-select", "none")
+      .style("opacity", (d) => (isPrimaryLabel(d) ? 1 : 0))
       .text((d) => d.name);
 
     // title tooltip
@@ -199,6 +200,14 @@ export function KnowledgeGraph({
     const MAX_HOPS = 2;
     let highlightedId: string | null = null;
     let draggingId: string | null = null;
+
+    function isPrimaryLabel(node: SimNode): boolean {
+      return simNodes.length <= 170 || node.frequency >= 5 || node.radius >= 16;
+    }
+
+    function restoreLabelVisibility() {
+      nodeSel.select("text").style("opacity", (n) => (isPrimaryLabel(n) ? 1 : 0));
+    }
 
     function bfsDepthMap(startId: string, maxDepth: number): Map<string, number> {
       const depth = new Map<string, number>();
@@ -248,7 +257,13 @@ export function KnowledgeGraph({
         }
       });
 
-      nodeSel.select("text").text((n) => {
+      nodeSel.select("text")
+        .style("opacity", (n) => {
+          const hop = depthMap.get(n.id);
+          if (hop !== undefined && hop <= 1) return 1;
+          return isPrimaryLabel(n) ? 0.38 : 0;
+        })
+        .text((n) => {
         const hop = depthMap.get(n.id);
         if (hop !== undefined && hop <= 1) return n.name;
         return n.name;
@@ -264,6 +279,7 @@ export function KnowledgeGraph({
           .attr("marker-end", "");
       });
       nodeSel.select("text").text((n) => n.name);
+      restoreLabelVisibility();
     }
 
     // ---- 悬停高亮（拖拽期间锁定，不受 mouseenter/mouseleave 干扰） ----

@@ -6,6 +6,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 
 export type RightTab = "integration" | "rag" | "dialogue" | "report";
 export type GraphMode = "single" | "merged" | "compare";
+export type GraphDisplayMode = "core" | "full";
 export type Theme = "light" | "dark";
 
 const PERSIST_KEY = "kfa-ui-v1";
@@ -39,6 +40,7 @@ export interface UIState {
   activeRightTab: RightTab;
   theme: Theme;
   graphTopN: number;
+  graphDisplayMode: GraphDisplayMode;
   workflowUseLLM: boolean;
 
   // ---- 非持久化 ----
@@ -62,6 +64,7 @@ export interface UIState {
   setActiveRightTab: (t: RightTab) => void;
   setTheme: (t: Theme) => void;
   setGraphMode: (m: GraphMode) => void;
+  setGraphDisplayMode: (m: GraphDisplayMode) => void;
   setGraphTopN: (n: number) => void;
   setWorkflowUseLLM: (enabled: boolean) => void;
   setSelectedTextbookId: (id: string | null) => void;
@@ -89,6 +92,7 @@ export const useUIStore = create<UIState>()(
       activeRightTab: "integration",
       theme: "light",
       graphTopN: GRAPH_TOP_N_DEFAULT,
+      graphDisplayMode: "core",
       workflowUseLLM: false,
 
       selectedTextbookId: null,
@@ -113,6 +117,7 @@ export const useUIStore = create<UIState>()(
         set({ theme });
       },
       setGraphMode: (graphMode) => set({ graphMode }),
+      setGraphDisplayMode: (graphDisplayMode) => set({ graphDisplayMode }),
       setGraphTopN: (graphTopN) => set({ graphTopN: clamp(graphTopN, 50, 420) }),
       setWorkflowUseLLM: (workflowUseLLM) => set({ workflowUseLLM }),
       setSelectedTextbookId: (selectedTextbookId) => set({ selectedTextbookId }),
@@ -139,9 +144,10 @@ export const useUIStore = create<UIState>()(
         activeRightTab: state.activeRightTab,
         theme: state.theme,
         graphTopN: state.graphTopN,
+        graphDisplayMode: state.graphDisplayMode,
         workflowUseLLM: state.workflowUseLLM
       }),
-      version: 4,
+      version: 5,
       onRehydrateStorage: () => (state) => {
         if (state?.theme) {
           document.documentElement.setAttribute("data-theme", state.theme);

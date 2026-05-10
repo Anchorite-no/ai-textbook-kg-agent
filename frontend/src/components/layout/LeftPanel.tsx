@@ -23,6 +23,7 @@ export function LeftPanel() {
   const workflowUseLLM = useUIStore((s) => s.workflowUseLLM);
   const { data: textbooks, isLoading } = useTextbooksQuery();
   const [showUpload, setShowUpload] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!selectedTextbookId && textbooks?.[0]?.raw_file_id) {
@@ -32,6 +33,7 @@ export function LeftPanel() {
 
   const uploadWorkflow = useMutation({
     mutationFn: async (files: File[]) => {
+      setUploadStatus(`正在上传 ${files.length} 个文件并创建整理任务…`);
       const accepted = await workflowsApi.organizeFiles(files, {
         useLlm: workflowUseLLM,
         buildGraph: true,
@@ -43,7 +45,11 @@ export function LeftPanel() {
         maxNodesPerSection: 12,
         alignmentMinConfidence: 0.62
       });
-      return jobsApi.waitForJob(accepted.job.id, 300_000);
+      setUploadStatus("任务已创建，正在解析并生成知识资产…");
+      return jobsApi.waitForJob(accepted.job.id, 300_000, (job) => {
+        const progress = typeof job.progress === "number" ? ` ${job.progress}%` : "";
+        setUploadStatus(`${job.message || "正在处理"}${progress}`);
+      });
     },
     onSuccess: async (job) => {
       await Promise.all([
@@ -60,11 +66,15 @@ export function LeftPanel() {
         setSelectedTextbookId(rawFileIds[0]);
       }
       setShowUpload(false);
+      setUploadStatus(null);
       toastStore.push({
         tone: "success",
         title: "文件已整理生成",
         description: `${rawFileIds.length || 1} 个文件已完成解析、图谱、RAG 和整合流程`
       });
+    },
+    onError: () => {
+      setUploadStatus(null);
     }
   });
 
@@ -130,7 +140,7 @@ export function LeftPanel() {
           <UploadZone
             onUpload={handleUpload}
             disabled={uploadWorkflow.isPending}
-            status={uploadWorkflow.isPending ? "正在解析并生成知识图谱…" : undefined}
+            status={uploadWorkflow.isPending ? uploadStatus ?? "正在解析并生成知识图谱…" : undefined}
           />
         ) : null}
 

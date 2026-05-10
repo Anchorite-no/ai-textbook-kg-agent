@@ -2,7 +2,7 @@
 
 import { Maximize2, PanelRightOpen, RefreshCw, Search, RotateCcw } from "lucide-react";
 import { IconButton, SegmentedControl, Tag, Tooltip } from "@/components/_kit";
-import { useUIStore, type GraphMode } from "@/store/uiStore";
+import { useUIStore, type GraphDisplayMode, type GraphMode } from "@/store/uiStore";
 
 export interface GraphToolbarProps {
   nodeCount: number;
@@ -19,6 +19,11 @@ const modeOptions = [
   { value: "compare" as GraphMode, label: "对照" }
 ];
 
+const displayOptions = [
+  { value: "core" as GraphDisplayMode, label: "核心" },
+  { value: "full" as GraphDisplayMode, label: "完整" }
+];
+
 export function GraphToolbar({
   nodeCount,
   edgeCount,
@@ -29,6 +34,8 @@ export function GraphToolbar({
 }: GraphToolbarProps) {
   const graphMode = useUIStore((s) => s.graphMode);
   const setGraphMode = useUIStore((s) => s.setGraphMode);
+  const graphDisplayMode = useUIStore((s) => s.graphDisplayMode);
+  const setGraphDisplayMode = useUIStore((s) => s.setGraphDisplayMode);
   const searchKeyword = useUIStore((s) => s.searchKeyword);
   const setSearchKeyword = useUIStore((s) => s.setSearchKeyword);
   const rightHidden = useUIStore((s) => s.rightHidden);
@@ -41,6 +48,13 @@ export function GraphToolbar({
         onChange={setGraphMode}
         options={modeOptions}
         ariaLabel="图谱模式"
+      />
+
+      <SegmentedControl<GraphDisplayMode>
+        value={graphDisplayMode}
+        onChange={setGraphDisplayMode}
+        options={displayOptions}
+        ariaLabel="图谱显示范围"
       />
 
       <div className="relative min-w-0 flex-1 max-w-56">

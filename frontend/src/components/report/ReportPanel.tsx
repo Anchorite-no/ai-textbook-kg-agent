@@ -2,7 +2,7 @@ import { FileText, Download, Copy, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
-import { Button, EmptyState } from "@/components/_kit";
+import { Button, EmptyState, Tag } from "@/components/_kit";
 import { integrationApi } from "@/api/integration";
 import { ragApi } from "@/api/rag";
 import { reportApi } from "@/api/report";
@@ -16,6 +16,7 @@ export function ReportPanel() {
   const reportGenerateTick = useUIStore((s) => s.reportGenerateTick);
   const [report, setReport] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [reportMeta, setReportMeta] = useState<{ llmUsed: boolean; generatedAt: string } | null>(null);
 
   const integration = useQuery({
     queryKey: ["integration", rawFileIds.join(","), "report"],
@@ -53,6 +54,10 @@ export function ReportPanel() {
       });
       setReport(generated.markdown);
       const llm = generated.metadata?.llm as { used?: boolean } | undefined;
+      setReportMeta({
+        llmUsed: llm?.used === true,
+        generatedAt: new Date(generated.generated_at ?? Date.now()).toLocaleTimeString("zh-CN")
+      });
       toastStore.push({
         tone: "success",
         title: "报告已生成",
@@ -68,6 +73,7 @@ export function ReportPanel() {
         graphRagStatus: graphRagStatus.data
       });
       setReport(next);
+      setReportMeta({ llmUsed: false, generatedAt: new Date().toLocaleTimeString("zh-CN") });
       toastStore.push({ tone: "warning", title: "后端报告接口暂不可用", description: "已使用当前真实接口缓存生成本地摘要" });
     } finally {
       setGenerating(false);
@@ -116,7 +122,17 @@ export function ReportPanel() {
   return (
     <div className="flex flex-col h-full">
       <div className="px-3 py-2 border-b border-border-soft flex items-center justify-between">
-        <h3 className="text-h2 text-text-strong">整合报告</h3>
+        <div className="min-w-0 flex items-center gap-2">
+          <h3 className="text-h2 text-text-strong">整合报告</h3>
+          {generating ? (
+            <Tag size="sm" variant="info">LLM 分析中</Tag>
+          ) : reportMeta ? (
+            <Tag size="sm" variant={reportMeta.llmUsed ? "success" : "warning"}>
+              {reportMeta.llmUsed ? "LLM 已使用" : "规则报告"}
+            </Tag>
+          ) : null}
+          {reportMeta ? <span className="text-meta text-text-subtle">{reportMeta.generatedAt}</span> : null}
+        </div>
         <div className="flex items-center gap-1">
           <Button size="sm" variant="ghost" leftIcon={<Sparkles className="size-3" />} onClick={handleGenerate} loading={generating}>
             重生成

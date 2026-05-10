@@ -11,11 +11,16 @@ export async function retryJob(jobId: string): Promise<JobRetryResponse> {
   });
 }
 
-export async function waitForJob(jobId: string, timeoutMs = 180_000): Promise<JobRecord> {
+export async function waitForJob(
+  jobId: string,
+  timeoutMs = 180_000,
+  onProgress?: (job: JobRecord) => void
+): Promise<JobRecord> {
   const startedAt = Date.now();
   let delay = 800;
   while (Date.now() - startedAt < timeoutMs) {
     const job = await getJob(jobId);
+    onProgress?.(job);
     if (job.status === "completed" || job.status === "failed") return job;
     await new Promise((resolve) => setTimeout(resolve, delay));
     delay = Math.min(2_500, delay + 300);
