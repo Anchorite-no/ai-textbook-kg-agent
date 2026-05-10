@@ -24,6 +24,7 @@ from app.services.parsed_storage import list_parsed_textbooks, load_parsed_textb
 
 INDEX_VERSION = "hybrid_bm25_hash_embedding_v1"
 INDEX_FILENAME = "rag_index.json"
+STATUS_FILENAME = "rag_index_status.json"
 BM25_K1 = 1.5
 BM25_B = 0.75
 MIN_QUERY_COVERAGE = 0.12
@@ -83,14 +84,21 @@ def build_rag_index(request: RagIndexRequest, job: JobRecord) -> RagIndexStatus:
     path = _index_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    _write_status_payload(payload)
     return _status_from_payload(payload, path)
 
 
 def get_rag_index_status() -> RagIndexStatus:
+    index_path = _index_path()
+    status_path = _status_path()
+    status_payload = _load_status_payload()
+    if status_payload is not None and index_path.exists() and status_path.stat().st_mtime >= index_path.stat().st_mtime:
+        return _status_from_payload(status_payload, index_path)
     payload = _load_index_payload()
     if payload is None:
         return RagIndexStatus(status="empty")
-    return _status_from_payload(payload, _index_path())
+    _write_status_payload(payload)
+    return _status_from_payload(payload, index_path)
 
 
 def query_rag_index(request: RagQueryRequest) -> RagQueryResponse:
@@ -198,11 +206,40 @@ def _index_path() -> Path:
     return settings.index_data_dir / INDEX_FILENAME
 
 
+def _status_path() -> Path:
+    return settings.index_data_dir / STATUS_FILENAME
+
+
 def _load_index_payload() -> dict[str, Any] | None:
     path = _index_path()
     if not path.exists():
         return None
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _load_status_payload() -> dict[str, Any] | None:
+    path = _status_path()
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _write_status_payload(payload: dict[str, Any]) -> None:
+    status_payload = {
+        "version": payload.get("version"),
+        "built_by_job_id": payload.get("built_by_job_id"),
+        "updated_at": payload.get("updated_at"),
+        "raw_file_ids": payload.get("raw_file_ids") or [],
+        "textbook_count": payload.get("textbook_count", 0),
+        "chunk_count": payload.get("chunk_count", 0),
+        "format_counts": payload.get("format_counts") or {},
+        "locator_coverage": payload.get("locator_coverage") or {},
+        "embedding": payload.get("embedding") or {},
+        "avg_doc_len": payload.get("avg_doc_len"),
+    }
+    path = _status_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(status_payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def _status_from_payload(payload: dict[str, Any], path: Path) -> RagIndexStatus:

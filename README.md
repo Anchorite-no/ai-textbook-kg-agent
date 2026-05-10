@@ -141,6 +141,7 @@ backend\.venv\Scripts\python.exe backend\scripts\benchmark_00_stage8_integration
 backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage9_graphrag.py
 backend\.venv\Scripts\python.exe backend\scripts\benchmark_00_stage9_graphrag.py
 backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage10_teacher_edit.py
+backend\.venv\Scripts\python.exe backend\scripts\smoke_frontend_dataset_workflow.py
 ```
 
 导出前后端契约快照：
@@ -251,6 +252,42 @@ Invoke-RestMethod "http://127.0.0.1:8010/api/graphrag/status?raw_file_ids=raw_a,
 
 阶段 9 返回 `citations`、`source_chunks`、`node_hits`、`paths` 和 `decisions`，用于回答定义、教材来源、差异、前置知识、关系路径和整合决策原因。
 
+七本书全量 demo 数据集：
+
+```powershell
+Invoke-RestMethod "http://127.0.0.1:8010/api/datasets/seven-books"
+```
+
+该接口只返回七本书在正式数据目录中的状态和入口；前端拿到 `raw_file_ids` 后继续使用 `/api/textbooks`、`/api/graph`、`/api/rag`、`/api/alignment`、`/api/integration`、`/api/graphrag`。如果需要从 `materials\converted_textbooks` 重新准备七本书：
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/datasets/seven-books/prepare -Body (@{
+  force_rebuild = $false
+  build_graph = $true
+  build_layered_graph = $true
+  build_rag = $true
+  build_alignment = $true
+  build_integration = $true
+  use_llm = $false
+} | ConvertTo-Json) -ContentType "application/json"
+```
+
+前端上传一个或多个文件并直接整理生成：
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/workflows/organize -Form @{
+  files = Get-Item .\book_a.md, .\book_b.md
+  build_graph = $true
+  build_layered_graphs = $true
+  build_rag = $true
+  build_alignment_graph = $true
+  build_integration_result = $true
+  use_llm = $false
+}
+```
+
+返回 `job.id` 后轮询 `/api/jobs/{job_id}`；完成时 `job.result.raw_file_ids` 和 `job.result.endpoints` 就是正式读取入口。
+
 教师覆盖整合决策：
 
 ```powershell
@@ -353,3 +390,5 @@ npm run dev
 - `/api/graphrag/query` GraphRAG 问答，返回引用、知识点、路径和整合决策证据。
 - `/api/integration/decisions/{decision_id}/override` 教师覆盖整合决策。
 - `/api/dialogue/messages` 教师对话修改决策并记录历史。
+- `/api/datasets/seven-books` 七本书全量 demo 数据集状态，使用正式数据目录和正式读取接口。
+- `/api/workflows/organize` 前端上传一个或多个文件后，一键生成 parsed/KG/RAG/对齐/整合。

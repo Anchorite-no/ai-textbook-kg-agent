@@ -30,6 +30,11 @@ export type TextbookListResponse = Schemas["TextbookListResponse"];
 export type TextbookUploadResponse = Schemas["TextbookUploadResponse"];
 export type TextbookUploadError = Schemas["TextbookUploadError"];
 export type TextbookBatchUploadResponse = Schemas["TextbookBatchUploadResponse"];
+export type SampleBookSummary = Schemas["SampleBookSummary"];
+export type SampleDatasetResponse = Schemas["SampleDatasetResponse"];
+export type SampleDatasetPrepareRequest = Schemas["SampleDatasetPrepareRequest"];
+export type SampleDatasetPrepareResponse = Schemas["SampleDatasetPrepareResponse"];
+export type OrganizeWorkflowAcceptedResponse = Schemas["OrganizeWorkflowAcceptedResponse"];
 
 // Phase 3：图谱（GPT 已建好）
 export type KnowledgeNode = Schemas["KnowledgeNode"];

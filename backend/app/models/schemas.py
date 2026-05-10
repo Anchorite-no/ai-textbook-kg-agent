@@ -696,6 +696,8 @@ class JobType(str, Enum):
     integration_build = "integration_build"
     rag_index = "rag_index"
     converted_textbook_import = "converted_textbook_import"
+    dataset_prepare = "dataset_prepare"
+    organize_workflow = "organize_workflow"
 
 
 class PipelineStepStatus(str, Enum):
@@ -873,3 +875,64 @@ class TextbookSummary(ContractModel):
 
 class TextbookListResponse(ContractModel):
     textbooks: list[TextbookSummary]
+
+
+class SampleBookSummary(ContractModel):
+    title: str
+    raw_file_id: str
+    source_sha256_16: str | None = None
+    page_count: int | None = None
+    text_char_count: int | None = None
+    parsed_ready: bool = False
+    graph_ready: bool = False
+    layered_graph_ready: bool = False
+    chunk_count: int = 0
+    section_count: int = 0
+    node_count: int = 0
+    edge_count: int = 0
+    endpoints: dict[str, str] = Field(default_factory=dict)
+
+
+class SampleDatasetResponse(ContractModel):
+    id: str
+    title: str
+    status: Literal["missing_materials", "not_prepared", "partial", "ready"]
+    book_count: int = 0
+    books: list[SampleBookSummary] = Field(default_factory=list)
+    raw_file_ids: list[str] = Field(default_factory=list)
+    rag_ready: bool = False
+    alignment_ready: bool = False
+    integration_ready: bool = False
+    graphrag_ready: bool = False
+    metrics: dict[str, Any] = Field(default_factory=dict)
+    endpoints: dict[str, str] = Field(default_factory=dict)
+    message: str | None = None
+
+
+class SampleDatasetPrepareRequest(ContractModel):
+    force_rebuild: bool = False
+    build_graph: bool = True
+    build_layered_graph: bool = False
+    build_rag: bool = True
+    build_alignment: bool = True
+    build_integration: bool = True
+    use_llm: bool = False
+    max_sections: int = Field(default=120, ge=1, le=200)
+    max_nodes_per_section: int = Field(default=8, ge=1, le=30)
+    alignment_min_confidence: float = Field(default=0.62, ge=0, le=1)
+    alignment_max_nodes: int = Field(default=4000, ge=2, le=10000)
+    integration_target_compression_ratio: float = Field(default=0.30, gt=0, le=0.80)
+    integration_max_nodes: int = Field(default=4000, ge=2, le=10000)
+
+
+class SampleDatasetPrepareResponse(ContractModel):
+    job: JobRecord
+    accepted: bool = True
+    dataset: SampleDatasetResponse
+
+
+class OrganizeWorkflowAcceptedResponse(ContractModel):
+    job: JobRecord
+    accepted: bool = True
+    raw_file_ids: list[str] = Field(default_factory=list)
+    message: str

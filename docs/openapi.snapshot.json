@@ -57,6 +57,125 @@
         }
       }
     },
+    "/api/datasets/seven-books": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Get Seven Books",
+        "operationId": "get_seven_books_api_datasets_seven_books_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SampleDatasetResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/datasets/seven-books/prepare": {
+      "post": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Prepare Seven Books",
+        "operationId": "prepare_seven_books_api_datasets_seven_books_prepare_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SampleDatasetPrepareRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SampleDatasetPrepareResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/textbooks": {
       "get": {
         "tags": [
@@ -2047,6 +2166,67 @@
         }
       }
     },
+    "/api/workflows/organize": {
+      "post": {
+        "tags": [
+          "workflows"
+        ],
+        "summary": "Organize Uploaded Files",
+        "operationId": "organize_uploaded_files_api_workflows_organize_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_organize_uploaded_files_api_workflows_organize_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizeWorkflowAcceptedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/jobs/{job_id}": {
       "get": {
         "tags": [
@@ -2532,6 +2712,95 @@
           "job"
         ],
         "title": "AsyncTextbookParseResponse"
+      },
+      "Body_organize_uploaded_files_api_workflows_organize_post": {
+        "properties": {
+          "files": {
+            "items": {
+              "type": "string",
+              "contentMediaType": "application/octet-stream"
+            },
+            "type": "array",
+            "title": "Files"
+          },
+          "build_graph": {
+            "type": "boolean",
+            "title": "Build Graph",
+            "default": true
+          },
+          "build_layered_graphs": {
+            "type": "boolean",
+            "title": "Build Layered Graphs",
+            "default": true
+          },
+          "build_rag": {
+            "type": "boolean",
+            "title": "Build Rag",
+            "default": true
+          },
+          "build_alignment_graph": {
+            "type": "boolean",
+            "title": "Build Alignment Graph",
+            "default": true
+          },
+          "build_integration_result": {
+            "type": "boolean",
+            "title": "Build Integration Result",
+            "default": true
+          },
+          "use_llm": {
+            "type": "boolean",
+            "title": "Use Llm",
+            "default": false
+          },
+          "max_sections": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Max Sections",
+            "default": 80
+          },
+          "max_nodes_per_section": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Max Nodes Per Section",
+            "default": 8
+          },
+          "alignment_min_confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Alignment Min Confidence",
+            "default": 0.62
+          },
+          "alignment_max_nodes": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 2.0,
+            "title": "Alignment Max Nodes",
+            "default": 2000
+          },
+          "integration_target_compression_ratio": {
+            "type": "number",
+            "maximum": 0.8,
+            "exclusiveMinimum": 0.0,
+            "title": "Integration Target Compression Ratio",
+            "default": 0.3
+          },
+          "integration_max_nodes": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 2.0,
+            "title": "Integration Max Nodes",
+            "default": 2000
+          }
+        },
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "Body_organize_uploaded_files_api_workflows_organize_post"
       },
       "Body_upload_chunk_api_uploads_sessions__session_id__chunks__chunk_index__put": {
         "properties": {
@@ -4307,7 +4576,9 @@
           "alignment_build",
           "integration_build",
           "rag_index",
-          "converted_textbook_import"
+          "converted_textbook_import",
+          "dataset_prepare",
+          "organize_workflow"
         ],
         "title": "JobType"
       },
@@ -4794,6 +5065,36 @@
         ],
         "title": "LayeredGraphResponse"
       },
+      "OrganizeWorkflowAcceptedResponse": {
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/JobRecord"
+          },
+          "accepted": {
+            "type": "boolean",
+            "title": "Accepted",
+            "default": true
+          },
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "job",
+          "message"
+        ],
+        "title": "OrganizeWorkflowAcceptedResponse"
+      },
       "ParsedTextbook": {
         "properties": {
           "id": {
@@ -5247,6 +5548,298 @@
           "size_bytes"
         ],
         "title": "RawFile"
+      },
+      "SampleBookSummary": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          },
+          "source_sha256_16": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Sha256 16"
+          },
+          "page_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Count"
+          },
+          "text_char_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text Char Count"
+          },
+          "parsed_ready": {
+            "type": "boolean",
+            "title": "Parsed Ready",
+            "default": false
+          },
+          "graph_ready": {
+            "type": "boolean",
+            "title": "Graph Ready",
+            "default": false
+          },
+          "layered_graph_ready": {
+            "type": "boolean",
+            "title": "Layered Graph Ready",
+            "default": false
+          },
+          "chunk_count": {
+            "type": "integer",
+            "title": "Chunk Count",
+            "default": 0
+          },
+          "section_count": {
+            "type": "integer",
+            "title": "Section Count",
+            "default": 0
+          },
+          "node_count": {
+            "type": "integer",
+            "title": "Node Count",
+            "default": 0
+          },
+          "edge_count": {
+            "type": "integer",
+            "title": "Edge Count",
+            "default": 0
+          },
+          "endpoints": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Endpoints"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "raw_file_id"
+        ],
+        "title": "SampleBookSummary"
+      },
+      "SampleDatasetPrepareRequest": {
+        "properties": {
+          "force_rebuild": {
+            "type": "boolean",
+            "title": "Force Rebuild",
+            "default": false
+          },
+          "build_graph": {
+            "type": "boolean",
+            "title": "Build Graph",
+            "default": true
+          },
+          "build_layered_graph": {
+            "type": "boolean",
+            "title": "Build Layered Graph",
+            "default": false
+          },
+          "build_rag": {
+            "type": "boolean",
+            "title": "Build Rag",
+            "default": true
+          },
+          "build_alignment": {
+            "type": "boolean",
+            "title": "Build Alignment",
+            "default": true
+          },
+          "build_integration": {
+            "type": "boolean",
+            "title": "Build Integration",
+            "default": true
+          },
+          "use_llm": {
+            "type": "boolean",
+            "title": "Use Llm",
+            "default": false
+          },
+          "max_sections": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Max Sections",
+            "default": 120
+          },
+          "max_nodes_per_section": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Max Nodes Per Section",
+            "default": 8
+          },
+          "alignment_min_confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Alignment Min Confidence",
+            "default": 0.62
+          },
+          "alignment_max_nodes": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 2.0,
+            "title": "Alignment Max Nodes",
+            "default": 4000
+          },
+          "integration_target_compression_ratio": {
+            "type": "number",
+            "maximum": 0.8,
+            "exclusiveMinimum": 0.0,
+            "title": "Integration Target Compression Ratio",
+            "default": 0.3
+          },
+          "integration_max_nodes": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 2.0,
+            "title": "Integration Max Nodes",
+            "default": 4000
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SampleDatasetPrepareRequest"
+      },
+      "SampleDatasetPrepareResponse": {
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/JobRecord"
+          },
+          "accepted": {
+            "type": "boolean",
+            "title": "Accepted",
+            "default": true
+          },
+          "dataset": {
+            "$ref": "#/components/schemas/SampleDatasetResponse"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "job",
+          "dataset"
+        ],
+        "title": "SampleDatasetPrepareResponse"
+      },
+      "SampleDatasetResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "missing_materials",
+              "not_prepared",
+              "partial",
+              "ready"
+            ],
+            "title": "Status"
+          },
+          "book_count": {
+            "type": "integer",
+            "title": "Book Count",
+            "default": 0
+          },
+          "books": {
+            "items": {
+              "$ref": "#/components/schemas/SampleBookSummary"
+            },
+            "type": "array",
+            "title": "Books"
+          },
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "rag_ready": {
+            "type": "boolean",
+            "title": "Rag Ready",
+            "default": false
+          },
+          "alignment_ready": {
+            "type": "boolean",
+            "title": "Alignment Ready",
+            "default": false
+          },
+          "integration_ready": {
+            "type": "boolean",
+            "title": "Integration Ready",
+            "default": false
+          },
+          "graphrag_ready": {
+            "type": "boolean",
+            "title": "Graphrag Ready",
+            "default": false
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metrics"
+          },
+          "endpoints": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Endpoints"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "status"
+        ],
+        "title": "SampleDatasetResponse"
       },
       "Section": {
         "properties": {
