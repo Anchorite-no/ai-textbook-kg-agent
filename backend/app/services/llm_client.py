@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 import httpx
@@ -35,7 +36,25 @@ class LlmClient:
         response.raise_for_status()
         payload = response.json()
         content = payload["choices"][0]["message"]["content"]
-        return json.loads(content)
+        return parse_llm_json(content)
+
+
+def parse_llm_json(content: str) -> dict[str, Any]:
+    cleaned = content.strip()
+    fenced = re.search(r"```(?:json)?\s*(.*?)\s*```", cleaned, flags=re.DOTALL | re.IGNORECASE)
+    if fenced:
+        cleaned = fenced.group(1).strip()
+    try:
+        payload = json.loads(cleaned)
+    except json.JSONDecodeError:
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start < 0 or end <= start:
+            raise
+        payload = json.loads(cleaned[start : end + 1])
+    if not isinstance(payload, dict):
+        raise ValueError("LLM output must be a JSON object")
+    return payload
 
 
 llm_client = LlmClient()

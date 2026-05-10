@@ -22,7 +22,7 @@ from app.services.llm_client import llm_client
 from app.services.parsed_storage import load_parsed_textbook
 
 
-PROMPT_VERSION = "kg_extract_v1"
+PROMPT_VERSION = "kg_extract_v2"
 MAX_SECTION_CHARS = 3000
 TERM_PATTERN = re.compile(
     r"[\u4e00-\u9fa5A-Za-z0-9]{2,24}?(?:"
@@ -162,7 +162,7 @@ def _build_prompt(section: Section, text: str) -> str:
 输出严格 JSON，不要输出 Markdown。
 节点必须包含 name、definition、category、source_quote。
 关系必须包含 source、target、relation_type、description、source_quote。
-relation_type 只能是 prerequisite、parallel、contains、applies_to。
+relation_type 只能是 prerequisite、parallel、contains、applies_to、causes、leads_to、explains。
 如果证据不足，不要编造关系。
 
 章节标题：{section.title}
@@ -266,6 +266,18 @@ def _fallback_edges(names: list[str], text: str, chunks: list[Chunk]) -> list[Ed
     if applies_to is not None:
         edges.append(applies_to)
 
+    causes = _keyword_edge(names, text, chunks, ("导致", "引起", "造成", "诱发"), KnowledgeRelationType.causes)
+    if causes is not None:
+        edges.append(causes)
+
+    leads_to = _keyword_edge(names, text, chunks, ("进而", "随后", "最终", "使得"), KnowledgeRelationType.leads_to)
+    if leads_to is not None:
+        edges.append(leads_to)
+
+    explains = _keyword_edge(names, text, chunks, ("解释", "说明", "由于", "因为"), KnowledgeRelationType.explains)
+    if explains is not None:
+        edges.append(explains)
+
     if len(names) >= 3:
         edges.append(
             EdgeDraft(
@@ -319,7 +331,7 @@ def _keyword_edge(
                     source_name=source,
                     target_name=target,
                     relation_type=relation_type,
-                    description=f"{source} 可应用或作用于 {target}。",
+                    description=_description_for_relation(source, target, relation_type),
                     source_quote=sentence,
                     chunk=_chunk_for_quote(chunks, sentence),
                 )
@@ -438,7 +450,25 @@ def _relation_from_text(value: str) -> KnowledgeRelationType:
         return KnowledgeRelationType.contains
     if normalized in {"applies_to", "apply"}:
         return KnowledgeRelationType.applies_to
+    if normalized in {"causes", "cause"}:
+        return KnowledgeRelationType.causes
+    if normalized in {"leads_to", "lead_to"}:
+        return KnowledgeRelationType.leads_to
+    if normalized in {"explains", "explain"}:
+        return KnowledgeRelationType.explains
     return KnowledgeRelationType.mentioned_in
+
+
+def _description_for_relation(source: str, target: str, relation_type: KnowledgeRelationType) -> str:
+    if relation_type == KnowledgeRelationType.applies_to:
+        return f"{source} 可应用或作用于 {target}。"
+    if relation_type == KnowledgeRelationType.causes:
+        return f"{source} 可能导致或引起 {target}。"
+    if relation_type == KnowledgeRelationType.leads_to:
+        return f"{source} 可能进一步导致 {target}。"
+    if relation_type == KnowledgeRelationType.explains:
+        return f"{source} 可解释 {target}。"
+    return f"{source} 与 {target} 存在关系。"
 
 
 def _plan3_relation_name(relation_type: KnowledgeRelationType) -> str:
@@ -447,6 +477,9 @@ def _plan3_relation_name(relation_type: KnowledgeRelationType) -> str:
         KnowledgeRelationType.parallel_with: "parallel",
         KnowledgeRelationType.contains: "contains",
         KnowledgeRelationType.applies_to: "applies_to",
+        KnowledgeRelationType.causes: "causes",
+        KnowledgeRelationType.leads_to: "leads_to",
+        KnowledgeRelationType.explains: "explains",
     }
     return mapping.get(relation_type, relation_type.value.lower())
 
