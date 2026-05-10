@@ -11,7 +11,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
         version="0.1.0",
-        description="学科知识整合智能体第一阶段 API：统一 JSON、证据链和 mock 任务接口。",
+        description="学科知识整合智能体 API：多格式解析、统一 JSON、证据链和任务状态接口。",
     )
     app.add_middleware(
         CORSMiddleware,

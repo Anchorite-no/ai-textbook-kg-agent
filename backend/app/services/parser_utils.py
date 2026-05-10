@@ -32,6 +32,7 @@ class UnitRecord:
     element_type: DocumentElementType
     locator_text: str
     page: int | None = None
+    page_end: int | None = None
     line_start: int | None = None
     line_end: int | None = None
     sheet_name: str | None = None
@@ -118,7 +119,7 @@ def source_locator(raw_file: RawFile, unit: UnitRecord, text: str, element_ids: 
         source_type=raw_file.source_type,
         locator_text=unit.locator_text,
         page_start=unit.page,
-        page_end=unit.page,
+        page_end=unit.page_end or unit.page,
         line_start=unit.line_start,
         line_end=unit.line_end,
         sheet_name=unit.sheet_name,
@@ -248,7 +249,7 @@ def _section_type_for_unit(unit: UnitRecord) -> SectionType:
     if unit.sheet_name is not None:
         return SectionType.sheet
     if unit.page is not None:
-        return SectionType.page_window
+        return SectionType.page_window if unit.page_end and unit.page_end != unit.page else SectionType.section
     return SectionType.section
 
 

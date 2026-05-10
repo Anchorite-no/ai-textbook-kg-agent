@@ -214,7 +214,11 @@ export interface ParsedTextbook {
 }
 
 export type JobStatus = "queued" | "running" | "completed" | "failed";
-export type JobType = "textbook_upload" | "converted_textbook_import";
+export type JobType =
+  | "textbook_upload"
+  | "textbook_batch_upload"
+  | "textbook_parse"
+  | "converted_textbook_import";
 
 export interface JobRecord {
   id: string;
@@ -234,6 +238,23 @@ export interface TextbookUploadResponse {
   parsed_output_path: string;
   parsed_textbook: ParsedTextbook;
 }
+
+export interface TextbookUploadError {
+  filename: string;
+  error: string;
+  job: JobRecord | null;
+}
+
+export interface TextbookBatchUploadResponse {
+  job: JobRecord;
+  items: TextbookUploadResponse[];
+  errors: TextbookUploadError[];
+  total_count: number;
+  success_count: number;
+  failed_count: number;
+}
+
+export type TextbookUploadEndpointResponse = TextbookUploadResponse | TextbookBatchUploadResponse;
 
 export interface TextbookSummary {
   raw_file_id: string;

@@ -257,6 +257,8 @@ class JobStatus(str, Enum):
 
 class JobType(str, Enum):
     textbook_upload = "textbook_upload"
+    textbook_batch_upload = "textbook_batch_upload"
+    textbook_parse = "textbook_parse"
     converted_textbook_import = "converted_textbook_import"
 
 
@@ -277,6 +279,21 @@ class TextbookUploadResponse(ContractModel):
     raw_file_id: str
     parsed_output_path: str
     parsed_textbook: ParsedTextbook
+
+
+class TextbookUploadError(ContractModel):
+    filename: str
+    error: str
+    job: JobRecord | None = None
+
+
+class TextbookBatchUploadResponse(ContractModel):
+    job: JobRecord
+    items: list[TextbookUploadResponse]
+    errors: list[TextbookUploadError] = Field(default_factory=list)
+    total_count: int
+    success_count: int
+    failed_count: int
 
 
 class TextbookSummary(ContractModel):
