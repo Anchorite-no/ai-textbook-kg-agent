@@ -135,7 +135,7 @@ def run_parser_smoke(samples: dict[str, Path]) -> None:
     try:
         parse_uploaded_file(samples["unsupported"], samples["unsupported"].name)
     except ValueError as exc:
-        assert "暂不支持" in str(exc)
+        assert "LibreOffice" in str(exc)
     else:
         raise AssertionError("unsupported legacy Office file should fail clearly")
 
@@ -175,7 +175,7 @@ def run_api_smoke(samples: dict[str, Path]) -> None:
     assert batch_payload["success_count"] == 1, json.dumps(batch_payload, ensure_ascii=False)
     assert batch_payload["failed_count"] == 1, json.dumps(batch_payload, ensure_ascii=False)
     assert batch_payload["items"][0]["parsed_textbook"]["raw_file"]["format"] == "md"
-    assert "暂不支持" in batch_payload["errors"][0]["error"]
+    assert "LibreOffice" in batch_payload["errors"][0]["error"]
 
     job_id = batch_payload["job"]["id"]
     job = client.get(f"/api/jobs/{job_id}")

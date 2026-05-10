@@ -27,6 +27,12 @@ SUPPORTED_UPLOAD_EXTENSIONS = {
     ".pptx",
 }
 
+LEGACY_OFFICE_EXTENSIONS = {
+    ".doc": ".docx",
+    ".xls": ".xlsx",
+    ".ppt": ".pptx",
+}
+
 SPREADSHEET_ROW_WINDOW = 40
 MAX_TABLE_COLUMNS = 24
 PDF_PAGE_WINDOW = 5
@@ -53,6 +59,9 @@ def parse_uploaded_file(file_path: Path, original_filename: str | None = None) -
     elif suffix == ".pptx":
         parsed = _parse_pptx(file_path, original_filename)
     else:
+        if suffix in LEGACY_OFFICE_EXTENSIONS:
+            target = LEGACY_OFFICE_EXTENSIONS[suffix]
+            raise ValueError(f"旧版 Office 文件 {suffix} 需要先通过 LibreOffice 转换为 {target}，当前阶段未检测到转换器")
         raise ValueError(f"当前计划 02 暂不支持 {suffix or 'unknown'}，请先上传 txt/md/pdf/docx/xlsx/csv/tsv/pptx")
     return parsed, save_parsed(parsed)
 
