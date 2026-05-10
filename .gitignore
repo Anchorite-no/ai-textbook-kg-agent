@@ -22,6 +22,8 @@ data/graphs/*
 data/alignments/*
 data/integrations/*
 data/jobs/*
+data/experiments/*
+data/*.jpg
 !data/uploads/.gitkeep
 !data/parsed/.gitkeep
 !data/indexes/.gitkeep

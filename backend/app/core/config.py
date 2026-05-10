@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     integration_data_dir: Path = PROJECT_ROOT / "data" / "integrations"
     llm_cache_dir: Path = PROJECT_ROOT / "data" / "graphs" / "llm_cache"
     llm_provider: str = "none"
+    llm_api_style: str = "responses"
     openai_api_key: str | None = None
     openai_base_url: str = "https://api.openai.com/v1"
     openai_model: str = "gpt-4o-mini"

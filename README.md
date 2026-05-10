@@ -19,6 +19,30 @@ uvicorn app.main:app --host 127.0.0.1 --port 8010 --reload
 Invoke-RestMethod http://127.0.0.1:8010/api/health
 ```
 
+## LLM 配置
+
+后端 KG 抽取支持 OpenAI-compatible Responses API。复制 `.env.example` 为 `.env` 后填写：
+
+```env
+LLM_PROVIDER=openai-compatible
+LLM_API_STYLE=responses
+OPENAI_BASE_URL=http://your-api-gateway/
+OPENAI_MODEL=gpt5.4
+OPENAI_API_KEY=your-api-key
+LLM_TIMEOUT_SECONDS=120
+LLM_MAX_TOKENS=2200
+```
+
+后端会优先调用 `/v1/responses`，并在兼容服务不支持时回退到 chat completions。密钥文件 `.env` 已被 gitignore，禁止提交。
+
+单书 LLM KG 试跑：
+
+```powershell
+cd D:\Hackathon
+$env:PYTHONPATH=(Resolve-Path backend).Path
+backend\.venv\Scripts\python.exe backend\scripts\trial_kg_llm_one_book.py --title '05_病理学' --max-sections 12 --max-nodes-per-section 10
+```
+
 导入一本已转换教材：
 
 ```powershell
