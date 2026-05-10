@@ -76,19 +76,19 @@ export function buildSimulation(
       "link",
       forceLink<SimNode, SimLink>(links)
         .id((d) => d.id)
-        .distance((d) => 60 + (1 - d.weight) * 60)
-        .strength((d) => 0.4 + d.weight * 0.4)
+        .distance((d) => 120 + (1 - d.weight) * 120)
+        .strength((d) => 0.22 + d.weight * 0.28)
     )
     .force(
       "charge",
-      forceManyBody<SimNode>().strength((d) => -180 - d.radius * 3)
+      forceManyBody<SimNode>().strength((d) => -520 - d.radius * 8)
     )
-    .force("center", forceCenter(width / 2, height / 2).strength(0.06))
+    .force("center", forceCenter(width / 2, height / 2).strength(0.035))
     .force(
       "collide",
       forceCollide<SimNode>()
-        .radius((d) => d.radius + 6)
-        .iterations(2)
+        .radius((d) => d.radius + 22)
+        .iterations(3)
     )
     .alphaDecay(0.04)
     .velocityDecay(0.3);

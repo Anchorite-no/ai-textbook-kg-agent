@@ -302,13 +302,13 @@ export function KnowledgeGraph({
         "link",
         d3.forceLink<SimNode, SimLink>(simLinks)
           .id((d) => d.id)
-          .distance((d) => 80 + (1 - d.weight) * 80)
-          .strength((d) => 0.3 + d.weight * 0.4)
+          .distance((d) => 120 + (1 - d.weight) * 120)
+          .strength((d) => 0.22 + d.weight * 0.28)
       )
-      .force("charge", d3.forceManyBody<SimNode>().strength(-250))
-      .force("x", d3.forceX<SimNode>(centerX).strength(0.04))
-      .force("y", d3.forceY<SimNode>(centerY).strength(0.04))
-      .force("collide", d3.forceCollide<SimNode>().radius((d) => d.radius + 12).iterations(2));
+      .force("charge", d3.forceManyBody<SimNode>().strength((d) => -520 - d.radius * 8))
+      .force("x", d3.forceX<SimNode>(centerX).strength(0.025))
+      .force("y", d3.forceY<SimNode>(centerY).strength(0.025))
+      .force("collide", d3.forceCollide<SimNode>().radius((d) => d.radius + 22).iterations(3));
 
     simulationRef.current = simulation;
 

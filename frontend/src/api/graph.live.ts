@@ -26,7 +26,7 @@ export async function fetchGraph(options: FetchGraphOptions = {}): Promise<Graph
       query: {
         mode: "single",
         raw_file_id: ids[0],
-        top_n: options.topN ?? 1000
+        top_n: options.topN ?? 300
       }
     });
     const nodes = data.nodes ?? [];
@@ -43,10 +43,11 @@ export async function fetchGraph(options: FetchGraphOptions = {}): Promise<Graph
     };
   }
 
+  const perGraphTopN = Math.max(30, Math.ceil((options.topN ?? 300) / Math.max(ids.length, 1)));
   const graphs = await Promise.all(
     ids.map((id) =>
       request<GraphResponse>("/api/graph", {
-        query: { mode: "single", raw_file_id: id, top_n: options.topN ?? 1000 }
+        query: { mode: "single", raw_file_id: id, top_n: perGraphTopN }
       })
     )
   );
