@@ -8,8 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "sync:api": "openapi-typescript http://127.0.0.1:8010/openapi.json -o src/types/api.generated.ts --immutable",
-    "sync:api:file": "openapi-typescript ../docs/openapi.snapshot.json -o src/types/api.generated.ts --immutable"
+    "sync:api": "openapi-typescript http://127.0.0.1:8010/openapi.json -o src/types/api.generated.ts",
+    "sync:api:file": "openapi-typescript ../docs/openapi.snapshot.json -o src/types/api.generated.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.2",

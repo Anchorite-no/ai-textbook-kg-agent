@@ -4,809 +4,945 @@
  */
 
 export interface paths {
-    readonly "/api/health": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Health */
-        readonly get: operations["health_api_health_get"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["health_api_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/textbooks": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/textbooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** List Textbooks */
-        readonly get: operations["list_textbooks_api_textbooks_get"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["list_textbooks_api_textbooks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/textbooks/upload": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/textbooks/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /** Upload Textbook */
-        readonly post: operations["upload_textbook_api_textbooks_upload_post"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["upload_textbook_api_textbooks_upload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/textbooks/upload-batch": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/textbooks/upload-batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /** Upload Textbooks Batch */
-        readonly post: operations["upload_textbooks_batch_api_textbooks_upload_batch_post"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["upload_textbooks_batch_api_textbooks_upload_batch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/textbooks/{raw_file_id}/parse": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/textbooks/upload-async": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
-        /** Parse Textbook */
-        readonly post: operations["parse_textbook_api_textbooks__raw_file_id__parse_post"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get?: never;
+        put?: never;
+        /** Upload Textbook Async */
+        post: operations["upload_textbook_async_api_textbooks_upload_async_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/textbooks/{raw_file_id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/textbooks/{raw_file_id}/parse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Parse Textbook */
+        post: operations["parse_textbook_api_textbooks__raw_file_id__parse_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/textbooks/{raw_file_id}/parse-async": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Parse Textbook Async */
+        post: operations["parse_textbook_async_api_textbooks__raw_file_id__parse_async_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/textbooks/{raw_file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Get Textbook */
-        readonly get: operations["get_textbook_api_textbooks__raw_file_id__get"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["get_textbook_api_textbooks__raw_file_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/uploads/sessions": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/uploads/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /** Create Upload Session */
-        readonly post: operations["create_upload_session_api_uploads_sessions_post"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["create_upload_session_api_uploads_sessions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/uploads/sessions/{session_id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/uploads/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Get Upload Session */
-        readonly get: operations["get_upload_session_api_uploads_sessions__session_id__get"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["get_upload_session_api_uploads_sessions__session_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/uploads/sessions/{session_id}/chunks/{chunk_index}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/uploads/sessions/{session_id}/chunks/{chunk_index}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
+        get?: never;
         /** Upload Chunk */
-        readonly put: operations["upload_chunk_api_uploads_sessions__session_id__chunks__chunk_index__put"];
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        put: operations["upload_chunk_api_uploads_sessions__session_id__chunks__chunk_index__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/uploads/sessions/{session_id}/complete": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/uploads/sessions/{session_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /** Complete Upload Session */
-        readonly post: operations["complete_upload_session_api_uploads_sessions__session_id__complete_post"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["complete_upload_session_api_uploads_sessions__session_id__complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/graph/build": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/uploads/sessions/{session_id}/complete-async": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
-        /** Build Graph */
-        readonly post: operations["build_graph_api_graph_build_post"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get?: never;
+        put?: never;
+        /** Complete Upload Session Async */
+        post: operations["complete_upload_session_async_api_uploads_sessions__session_id__complete_async_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/graph": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/graph/build": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Build Graph */
+        post: operations["build_graph_api_graph_build_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Get Graph */
-        readonly get: operations["get_graph_api_graph_get"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["get_graph_api_graph_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/graph/nodes/{node_id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/graph/nodes/{node_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Get Graph Node */
-        readonly get: operations["get_graph_node_api_graph_nodes__node_id__get"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["get_graph_node_api_graph_nodes__node_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/jobs/{job_id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Get Job */
-        readonly get: operations["get_job_api_jobs__job_id__get"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["get_job_api_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Job */
+        post: operations["retry_job_api_jobs__job_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /** ApiErrorResponse */
-        readonly ApiErrorResponse: {
+        ApiErrorResponse: {
             /** Message */
-            readonly message: string;
+            message: string;
             /** Code */
-            readonly code: string;
+            code: string;
             /** Detail */
-            readonly detail?: string | null;
+            detail?: string | null;
+        };
+        /** AsyncTextbookParseResponse */
+        AsyncTextbookParseResponse: {
+            job: components["schemas"]["JobRecord"];
+            /**
+             * Accepted
+             * @default true
+             */
+            accepted: boolean;
+            /** Upload Session Id */
+            upload_session_id?: string | null;
         };
         /** Body_upload_chunk_api_uploads_sessions__session_id__chunks__chunk_index__put */
-        readonly Body_upload_chunk_api_uploads_sessions__session_id__chunks__chunk_index__put: {
+        Body_upload_chunk_api_uploads_sessions__session_id__chunks__chunk_index__put: {
             /** File */
-            readonly file: string;
+            file: string;
         };
         /** Body_upload_textbook_api_textbooks_upload_post */
-        readonly Body_upload_textbook_api_textbooks_upload_post: {
+        Body_upload_textbook_api_textbooks_upload_post: {
             /** File */
-            readonly file?: string | null;
+            file?: string | null;
             /** Files */
-            readonly files?: readonly string[] | null;
+            files?: string[] | null;
             /** Textbook Title */
-            readonly textbook_title?: string | null;
+            textbook_title?: string | null;
+        };
+        /** Body_upload_textbook_async_api_textbooks_upload_async_post */
+        Body_upload_textbook_async_api_textbooks_upload_async_post: {
+            /** File */
+            file?: string | null;
+            /** Textbook Title */
+            textbook_title?: string | null;
         };
         /** Body_upload_textbooks_batch_api_textbooks_upload_batch_post */
-        readonly Body_upload_textbooks_batch_api_textbooks_upload_batch_post: {
+        Body_upload_textbooks_batch_api_textbooks_upload_batch_post: {
             /** Files */
-            readonly files: readonly string[];
+            files: string[];
             /** Textbook Title */
-            readonly textbook_title?: string | null;
+            textbook_title?: string | null;
         };
         /** Chunk */
-        readonly Chunk: {
+        Chunk: {
             /** Id */
-            readonly id: string;
+            id: string;
             /** Raw File Id */
-            readonly raw_file_id: string;
+            raw_file_id: string;
             /** Section Id */
-            readonly section_id: string;
+            section_id: string;
             /** Text */
-            readonly text: string;
+            text: string;
             /** Order Index */
-            readonly order_index: number;
+            order_index: number;
             /** Char Start */
-            readonly char_start: number;
+            char_start: number;
             /** Char End */
-            readonly char_end: number;
+            char_end: number;
             /** Char Count */
-            readonly char_count: number;
-            readonly source_locator: components["schemas"]["SourceLocator"];
+            char_count: number;
+            source_locator: components["schemas"]["SourceLocator"];
             /** Metadata */
-            readonly metadata?: {
-                readonly [key: string]: unknown;
+            metadata?: {
+                [key: string]: unknown;
             };
         };
         /** DocumentElement */
-        readonly DocumentElement: {
+        DocumentElement: {
             /** Id */
-            readonly id: string;
+            id: string;
             /** Raw File Id */
-            readonly raw_file_id: string;
-            readonly type: components["schemas"]["DocumentElementType"];
+            raw_file_id: string;
+            type: components["schemas"]["DocumentElementType"];
             /** Text */
-            readonly text: string;
+            text: string;
             /** Order Index */
-            readonly order_index: number;
+            order_index: number;
             /** Parent Section Id */
-            readonly parent_section_id?: string | null;
-            readonly source_locator: components["schemas"]["SourceLocator"];
+            parent_section_id?: string | null;
+            source_locator: components["schemas"]["SourceLocator"];
             /** Char Count */
-            readonly char_count: number;
+            char_count: number;
             /** Metadata */
-            readonly metadata?: {
-                readonly [key: string]: unknown;
+            metadata?: {
+                [key: string]: unknown;
             };
         };
         /**
          * DocumentElementType
          * @enum {string}
          */
-        readonly DocumentElementType: "heading" | "paragraph" | "table" | "figure" | "list" | "page" | "slide" | "sheet" | "note";
+        DocumentElementType: "heading" | "paragraph" | "table" | "figure" | "list" | "page" | "slide" | "sheet" | "note";
         /** GraphBuildRequest */
-        readonly GraphBuildRequest: {
+        GraphBuildRequest: {
             /** Raw File Id */
-            readonly raw_file_id: string;
+            raw_file_id: string;
             /** Section Ids */
-            readonly section_ids?: readonly string[];
+            section_ids?: string[];
             /**
              * Force Rebuild
              * @default false
              */
-            readonly force_rebuild: boolean;
+            force_rebuild: boolean;
             /**
              * Max Sections
              * @default 20
              */
-            readonly max_sections: number;
+            max_sections: number;
             /**
              * Max Nodes Per Section
              * @default 8
              */
-            readonly max_nodes_per_section: number;
+            max_nodes_per_section: number;
             /**
              * Use Llm
              * @default true
              */
-            readonly use_llm: boolean;
+            use_llm: boolean;
         };
         /** GraphBuildResponse */
-        readonly GraphBuildResponse: {
-            readonly job: components["schemas"]["JobRecord"];
+        GraphBuildResponse: {
+            job: components["schemas"]["JobRecord"];
             /** Raw File Id */
-            readonly raw_file_id: string;
+            raw_file_id: string;
             /** Graph Output Path */
-            readonly graph_output_path: string;
-            readonly graph: components["schemas"]["GraphResponse"];
+            graph_output_path: string;
+            graph: components["schemas"]["GraphResponse"];
         };
         /** GraphNodeDetailResponse */
-        readonly GraphNodeDetailResponse: {
-            readonly node: components["schemas"]["KnowledgeNode"];
+        GraphNodeDetailResponse: {
+            node: components["schemas"]["KnowledgeNode"];
             /** Edges */
-            readonly edges?: readonly components["schemas"]["KnowledgeEdge"][];
+            edges?: components["schemas"]["KnowledgeEdge"][];
             /** Evidence Chunks */
-            readonly evidence_chunks?: readonly components["schemas"]["Chunk"][];
+            evidence_chunks?: components["schemas"]["Chunk"][];
             /** Graph Id */
-            readonly graph_id: string;
+            graph_id: string;
             /** Raw File Id */
-            readonly raw_file_id: string;
+            raw_file_id: string;
         };
         /** GraphResponse */
-        readonly GraphResponse: {
+        GraphResponse: {
             /** Id */
-            readonly id: string;
+            id: string;
             /** Raw File Id */
-            readonly raw_file_id: string;
+            raw_file_id: string;
             /** Title */
-            readonly title: string;
+            title: string;
             /** Nodes */
-            readonly nodes: readonly components["schemas"]["KnowledgeNode"][];
+            nodes: components["schemas"]["KnowledgeNode"][];
             /** Edges */
-            readonly edges: readonly components["schemas"]["KnowledgeEdge"][];
+            edges: components["schemas"]["KnowledgeEdge"][];
             /**
              * Generated At
              * Format: date-time
              */
-            readonly generated_at?: string;
+            generated_at?: string;
             /** Metadata */
-            readonly metadata?: {
-                readonly [key: string]: unknown;
+            metadata?: {
+                [key: string]: unknown;
             };
         };
         /** HealthResponse */
-        readonly HealthResponse: {
+        HealthResponse: {
             /**
              * Status
              * @constant
              */
-            readonly status: "ok";
+            status: "ok";
             /** App */
-            readonly app: string;
+            app: string;
             /** Version */
-            readonly version: string;
+            version: string;
             /**
              * Checked At
              * Format: date-time
              */
-            readonly checked_at?: string;
+            checked_at?: string;
         };
         /** JobRecord */
-        readonly JobRecord: {
+        JobRecord: {
             /** Id */
-            readonly id: string;
-            readonly job_type: components["schemas"]["JobType"];
-            readonly status: components["schemas"]["JobStatus"];
+            id: string;
+            job_type: components["schemas"]["JobType"];
+            status: components["schemas"]["JobStatus"];
             /**
              * Progress
              * @default 0
              */
-            readonly progress: number;
+            progress: number;
             /**
              * Message
              * @default
              */
-            readonly message: string;
+            message: string;
             /**
              * Created At
              * Format: date-time
              */
-            readonly created_at?: string;
+            created_at?: string;
             /**
              * Updated At
              * Format: date-time
              */
-            readonly updated_at?: string;
+            updated_at?: string;
             /** Result */
-            readonly result?: {
-                readonly [key: string]: unknown;
+            result?: {
+                [key: string]: unknown;
             } | null;
             /** Error */
-            readonly error?: string | null;
+            error?: string | null;
+            /** Steps */
+            steps?: components["schemas"]["PipelineStepRecord"][];
+            /**
+             * Retryable
+             * @default false
+             */
+            retryable: boolean;
+            /** Context Path */
+            context_path?: string | null;
+        };
+        /** JobRetryResponse */
+        JobRetryResponse: {
+            job: components["schemas"]["JobRecord"];
+            /**
+             * Accepted
+             * @default true
+             */
+            accepted: boolean;
         };
         /**
          * JobStatus
          * @enum {string}
          */
-        readonly JobStatus: "queued" | "running" | "completed" | "failed";
+        JobStatus: "queued" | "running" | "completed" | "failed";
         /**
          * JobType
          * @enum {string}
          */
-        readonly JobType: "textbook_upload" | "textbook_batch_upload" | "textbook_parse" | "large_file_upload" | "graph_build" | "converted_textbook_import";
+        JobType: "textbook_upload" | "textbook_batch_upload" | "textbook_parse" | "textbook_pipeline" | "large_file_upload" | "graph_build" | "converted_textbook_import";
         /** KnowledgeEdge */
-        readonly KnowledgeEdge: {
+        KnowledgeEdge: {
             /** Id */
-            readonly id: string;
+            id: string;
             /** Source Node Id */
-            readonly source_node_id: string;
+            source_node_id: string;
             /** Target Node Id */
-            readonly target_node_id: string;
-            readonly relation_type: components["schemas"]["KnowledgeRelationType"];
+            target_node_id: string;
+            relation_type: components["schemas"]["KnowledgeRelationType"];
             /** Description */
-            readonly description?: string | null;
-            readonly source_locator: components["schemas"]["SourceLocator"];
+            description?: string | null;
+            source_locator: components["schemas"]["SourceLocator"];
             /** Evidence Chunk Ids */
-            readonly evidence_chunk_ids?: readonly string[];
+            evidence_chunk_ids?: string[];
             /**
              * Confidence
              * @default 0
              */
-            readonly confidence: number;
+            confidence: number;
             /** Metadata */
-            readonly metadata?: {
-                readonly [key: string]: unknown;
+            metadata?: {
+                [key: string]: unknown;
             };
         };
         /** KnowledgeNode */
-        readonly KnowledgeNode: {
+        KnowledgeNode: {
             /** Id */
-            readonly id: string;
+            id: string;
             /** Name */
-            readonly name: string;
-            readonly node_type: components["schemas"]["KnowledgeNodeType"];
+            name: string;
+            node_type: components["schemas"]["KnowledgeNodeType"];
             /** Definition */
-            readonly definition?: string | null;
+            definition?: string | null;
             /** Aliases */
-            readonly aliases?: readonly string[];
-            readonly source_locator: components["schemas"]["SourceLocator"];
+            aliases?: string[];
+            source_locator: components["schemas"]["SourceLocator"];
             /** Evidence Chunk Ids */
-            readonly evidence_chunk_ids?: readonly string[];
+            evidence_chunk_ids?: string[];
             /**
              * Confidence
              * @default 0
              */
-            readonly confidence: number;
+            confidence: number;
             /** Metadata */
-            readonly metadata?: {
-                readonly [key: string]: unknown;
+            metadata?: {
+                [key: string]: unknown;
             };
         };
         /**
          * KnowledgeNodeType
          * @enum {string}
          */
-        readonly KnowledgeNodeType: "Concept" | "Term" | "Mechanism" | "Process" | "Structure" | "Function" | "Disease" | "Symptom" | "Pathogen" | "Diagnosis" | "Treatment" | "Experiment" | "Example";
+        KnowledgeNodeType: "Concept" | "Term" | "Mechanism" | "Process" | "Structure" | "Function" | "Disease" | "Symptom" | "Pathogen" | "Diagnosis" | "Treatment" | "Experiment" | "Example";
         /**
          * KnowledgeRelationType
          * @enum {string}
          */
-        readonly KnowledgeRelationType: "ALIAS_OF" | "SAME_AS" | "IS_A" | "PART_OF" | "CONTAINS" | "PARALLEL_WITH" | "PREREQUISITE_OF" | "CAUSES" | "LEADS_TO" | "APPLIES_TO" | "CONTRASTS_WITH" | "EXPLAINS" | "EVIDENCED_BY" | "MENTIONED_IN" | "REFINES" | "CONFLICTS_WITH";
+        KnowledgeRelationType: "ALIAS_OF" | "SAME_AS" | "IS_A" | "PART_OF" | "CONTAINS" | "PARALLEL_WITH" | "PREREQUISITE_OF" | "CAUSES" | "LEADS_TO" | "APPLIES_TO" | "CONTRASTS_WITH" | "EXPLAINS" | "EVIDENCED_BY" | "MENTIONED_IN" | "REFINES" | "CONFLICTS_WITH";
         /** ParsedTextbook */
-        readonly ParsedTextbook: {
+        ParsedTextbook: {
             /** Id */
-            readonly id: string;
-            readonly raw_file: components["schemas"]["RawFile"];
+            id: string;
+            raw_file: components["schemas"]["RawFile"];
             /** Elements */
-            readonly elements: readonly components["schemas"]["DocumentElement"][];
+            elements: components["schemas"]["DocumentElement"][];
             /** Sections */
-            readonly sections: readonly components["schemas"]["Section"][];
+            sections: components["schemas"]["Section"][];
             /** Chunks */
-            readonly chunks: readonly components["schemas"]["Chunk"][];
+            chunks: components["schemas"]["Chunk"][];
             /**
              * Generated At
              * Format: date-time
              */
-            readonly generated_at?: string;
+            generated_at?: string;
             /** Metadata */
-            readonly metadata?: {
-                readonly [key: string]: unknown;
+            metadata?: {
+                [key: string]: unknown;
             };
         };
+        /**
+         * PipelineStepName
+         * @enum {string}
+         */
+        PipelineStepName: "assemble_file" | "detect_format" | "parse_elements" | "build_sections" | "chunk_sections" | "persist_parsed";
+        /** PipelineStepRecord */
+        PipelineStepRecord: {
+            name: components["schemas"]["PipelineStepName"];
+            /** @default queued */
+            status: components["schemas"]["PipelineStepStatus"];
+            /**
+             * Progress
+             * @default 0
+             */
+            progress: number;
+            /**
+             * Message
+             * @default
+             */
+            message: string;
+            /** Started At */
+            started_at?: string | null;
+            /** Finished At */
+            finished_at?: string | null;
+            /** Error */
+            error?: string | null;
+        };
+        /**
+         * PipelineStepStatus
+         * @enum {string}
+         */
+        PipelineStepStatus: "queued" | "running" | "completed" | "failed" | "skipped";
         /** RawFile */
-        readonly RawFile: {
+        RawFile: {
             /** Id */
-            readonly id: string;
+            id: string;
             /** Original Filename */
-            readonly original_filename: string;
+            original_filename: string;
             /** Title */
-            readonly title: string;
+            title: string;
             /** Format */
-            readonly format: string;
+            format: string;
             /**
              * Source Type
              * @default uploaded
              * @enum {string}
              */
-            readonly source_type: "uploaded" | "converted_textbook" | "generated";
+            source_type: "uploaded" | "converted_textbook" | "generated";
             /** Storage Path */
-            readonly storage_path: string;
+            storage_path: string;
             /** Sha256 */
-            readonly sha256: string;
+            sha256: string;
             /** Size Bytes */
-            readonly size_bytes: number;
+            size_bytes: number;
             /** Page Count */
-            readonly page_count?: number | null;
+            page_count?: number | null;
             /**
              * Text Char Count
              * @default 0
              */
-            readonly text_char_count: number;
+            text_char_count: number;
             /**
              * Created At
              * Format: date-time
              */
-            readonly created_at?: string;
+            created_at?: string;
             /** Metadata */
-            readonly metadata?: {
-                readonly [key: string]: unknown;
+            metadata?: {
+                [key: string]: unknown;
             };
         };
         /** Section */
-        readonly Section: {
+        Section: {
             /** Id */
-            readonly id: string;
+            id: string;
             /** Raw File Id */
-            readonly raw_file_id: string;
+            raw_file_id: string;
             /** Title */
-            readonly title: string;
+            title: string;
             /** @default section */
-            readonly section_type: components["schemas"]["SectionType"];
+            section_type: components["schemas"]["SectionType"];
             /**
              * Level
              * @default 1
              */
-            readonly level: number;
+            level: number;
             /** Order Index */
-            readonly order_index: number;
+            order_index: number;
             /** Parent Section Id */
-            readonly parent_section_id?: string | null;
+            parent_section_id?: string | null;
             /** Element Ids */
-            readonly element_ids: readonly string[];
+            element_ids: string[];
             /** Content */
-            readonly content: string;
+            content: string;
             /** Char Count */
-            readonly char_count: number;
-            readonly source_locator: components["schemas"]["SourceLocator"];
+            char_count: number;
+            source_locator: components["schemas"]["SourceLocator"];
             /** Metadata */
-            readonly metadata?: {
-                readonly [key: string]: unknown;
+            metadata?: {
+                [key: string]: unknown;
             };
         };
         /**
          * SectionType
          * @enum {string}
          */
-        readonly SectionType: "chapter" | "section" | "page_window" | "slide" | "sheet" | "table";
+        SectionType: "chapter" | "section" | "page_window" | "slide" | "sheet" | "table";
         /** SourceLocator */
-        readonly SourceLocator: {
+        SourceLocator: {
             /** Raw File Id */
-            readonly raw_file_id: string;
+            raw_file_id: string;
             /** Source Path */
-            readonly source_path: string;
+            source_path: string;
             /** Source Type */
-            readonly source_type: string;
+            source_type: string;
             /** Locator Text */
-            readonly locator_text: string;
+            locator_text: string;
             /** Page Start */
-            readonly page_start?: number | null;
+            page_start?: number | null;
             /** Page End */
-            readonly page_end?: number | null;
+            page_end?: number | null;
             /** Line Start */
-            readonly line_start?: number | null;
+            line_start?: number | null;
             /** Line End */
-            readonly line_end?: number | null;
+            line_end?: number | null;
             /** Sheet Name */
-            readonly sheet_name?: string | null;
+            sheet_name?: string | null;
             /** Row Start */
-            readonly row_start?: number | null;
+            row_start?: number | null;
             /** Row End */
-            readonly row_end?: number | null;
+            row_end?: number | null;
             /** Slide Number */
-            readonly slide_number?: number | null;
+            slide_number?: number | null;
             /** Char Start */
-            readonly char_start?: number | null;
+            char_start?: number | null;
             /** Char End */
-            readonly char_end?: number | null;
+            char_end?: number | null;
             /** Element Ids */
-            readonly element_ids?: readonly string[];
+            element_ids?: string[];
             /** Quote Hash */
-            readonly quote_hash?: string | null;
+            quote_hash?: string | null;
         };
         /** TextbookBatchUploadResponse */
-        readonly TextbookBatchUploadResponse: {
-            readonly job: components["schemas"]["JobRecord"];
+        TextbookBatchUploadResponse: {
+            job: components["schemas"]["JobRecord"];
             /** Items */
-            readonly items: readonly components["schemas"]["TextbookUploadResponse"][];
+            items: components["schemas"]["TextbookUploadResponse"][];
             /** Errors */
-            readonly errors?: readonly components["schemas"]["TextbookUploadError"][];
+            errors?: components["schemas"]["TextbookUploadError"][];
             /** Total Count */
-            readonly total_count: number;
+            total_count: number;
             /** Success Count */
-            readonly success_count: number;
+            success_count: number;
             /** Failed Count */
-            readonly failed_count: number;
+            failed_count: number;
         };
         /** TextbookListResponse */
-        readonly TextbookListResponse: {
+        TextbookListResponse: {
             /** Textbooks */
-            readonly textbooks: readonly components["schemas"]["TextbookSummary"][];
+            textbooks: components["schemas"]["TextbookSummary"][];
         };
         /** TextbookSummary */
-        readonly TextbookSummary: {
+        TextbookSummary: {
             /** Raw File Id */
-            readonly raw_file_id: string;
+            raw_file_id: string;
             /** Title */
-            readonly title: string;
+            title: string;
             /** Format */
-            readonly format: string;
+            format: string;
             /** Page Count */
-            readonly page_count?: number | null;
+            page_count?: number | null;
             /** Element Count */
-            readonly element_count: number;
+            element_count: number;
             /** Section Count */
-            readonly section_count: number;
+            section_count: number;
             /** Chunk Count */
-            readonly chunk_count: number;
+            chunk_count: number;
             /** Parsed Output Path */
-            readonly parsed_output_path: string;
+            parsed_output_path: string;
             /**
              * Updated At
              * Format: date-time
              */
-            readonly updated_at: string;
+            updated_at: string;
         };
         /** TextbookUploadError */
-        readonly TextbookUploadError: {
+        TextbookUploadError: {
             /** Filename */
-            readonly filename: string;
+            filename: string;
             /** Error */
-            readonly error: string;
-            readonly job?: components["schemas"]["JobRecord"] | null;
+            error: string;
+            job?: components["schemas"]["JobRecord"] | null;
         };
         /** TextbookUploadResponse */
-        readonly TextbookUploadResponse: {
-            readonly job: components["schemas"]["JobRecord"];
+        TextbookUploadResponse: {
+            job: components["schemas"]["JobRecord"];
             /** Raw File Id */
-            readonly raw_file_id: string;
+            raw_file_id: string;
             /** Parsed Output Path */
-            readonly parsed_output_path: string;
-            readonly parsed_textbook: components["schemas"]["ParsedTextbook"];
+            parsed_output_path: string;
+            parsed_textbook: components["schemas"]["ParsedTextbook"];
         };
         /** UploadChunkResponse */
-        readonly UploadChunkResponse: {
-            readonly session: components["schemas"]["UploadSessionRecord"];
+        UploadChunkResponse: {
+            session: components["schemas"]["UploadSessionRecord"];
             /** Chunk Index */
-            readonly chunk_index: number;
+            chunk_index: number;
             /** Received Bytes */
-            readonly received_bytes: number;
+            received_bytes: number;
         };
         /** UploadSessionCompleteResponse */
-        readonly UploadSessionCompleteResponse: {
-            readonly session: components["schemas"]["UploadSessionRecord"];
-            readonly job: components["schemas"]["JobRecord"];
-            readonly parsed_upload?: components["schemas"]["TextbookUploadResponse"] | null;
+        UploadSessionCompleteResponse: {
+            session: components["schemas"]["UploadSessionRecord"];
+            job: components["schemas"]["JobRecord"];
+            parsed_upload?: components["schemas"]["TextbookUploadResponse"] | null;
         };
         /** UploadSessionCreateRequest */
-        readonly UploadSessionCreateRequest: {
+        UploadSessionCreateRequest: {
             /** Filename */
-            readonly filename: string;
+            filename: string;
             /** Total Size Bytes */
-            readonly total_size_bytes: number;
+            total_size_bytes: number;
             /** Total Chunks */
-            readonly total_chunks: number;
+            total_chunks: number;
             /** Chunk Size Bytes */
-            readonly chunk_size_bytes: number;
+            chunk_size_bytes: number;
             /** Sha256 */
-            readonly sha256?: string | null;
+            sha256?: string | null;
             /** Content Type */
-            readonly content_type?: string | null;
+            content_type?: string | null;
             /**
              * Parse On Complete
              * @default true
              */
-            readonly parse_on_complete: boolean;
+            parse_on_complete: boolean;
         };
         /** UploadSessionRecord */
-        readonly UploadSessionRecord: {
+        UploadSessionRecord: {
             /** Id */
-            readonly id: string;
+            id: string;
             /** Filename */
-            readonly filename: string;
+            filename: string;
             /** Total Size Bytes */
-            readonly total_size_bytes: number;
+            total_size_bytes: number;
             /** Total Chunks */
-            readonly total_chunks: number;
+            total_chunks: number;
             /** Chunk Size Bytes */
-            readonly chunk_size_bytes: number;
+            chunk_size_bytes: number;
             /** Sha256 */
-            readonly sha256?: string | null;
+            sha256?: string | null;
             /** Content Type */
-            readonly content_type?: string | null;
+            content_type?: string | null;
             /**
              * Parse On Complete
              * @default true
              */
-            readonly parse_on_complete: boolean;
+            parse_on_complete: boolean;
             /** @default created */
-            readonly status: components["schemas"]["UploadSessionStatus"];
+            status: components["schemas"]["UploadSessionStatus"];
             /** Uploaded Chunks */
-            readonly uploaded_chunks?: readonly number[];
+            uploaded_chunks?: number[];
             /** Missing Chunks */
-            readonly missing_chunks?: readonly number[];
+            missing_chunks?: number[];
             /**
              * Received Bytes
              * @default 0
              */
-            readonly received_bytes: number;
+            received_bytes: number;
             /**
              * Upload Progress
              * @default 0
              */
-            readonly upload_progress: number;
+            upload_progress: number;
             /**
              * Parse Progress
              * @default 0
              */
-            readonly parse_progress: number;
+            parse_progress: number;
             /** Job Id */
-            readonly job_id?: string | null;
+            job_id?: string | null;
             /** Assembled Path */
-            readonly assembled_path?: string | null;
+            assembled_path?: string | null;
             /** Raw File Id */
-            readonly raw_file_id?: string | null;
+            raw_file_id?: string | null;
             /** Parsed Output Path */
-            readonly parsed_output_path?: string | null;
+            parsed_output_path?: string | null;
             /** Error */
-            readonly error?: string | null;
+            error?: string | null;
             /**
              * Created At
              * Format: date-time
              */
-            readonly created_at?: string;
+            created_at?: string;
             /**
              * Updated At
              * Format: date-time
              */
-            readonly updated_at?: string;
+            updated_at?: string;
         };
         /**
          * UploadSessionStatus
          * @enum {string}
          */
-        readonly UploadSessionStatus: "created" | "uploading" | "assembling" | "parsing" | "completed" | "failed";
+        UploadSessionStatus: "created" | "uploading" | "assembling" | "parsing" | "completed" | "failed";
     };
     responses: never;
     parameters: never;
@@ -816,699 +952,897 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    readonly health_api_health_get: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    health_api_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Successful Response */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["HealthResponse"];
+                    "application/json": components["schemas"]["HealthResponse"];
                 };
             };
             /** @description Bad Request */
-            readonly 400: {
+            400: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Not Found */
-            readonly 404: {
+            404: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Unprocessable Entity */
-            readonly 422: {
+            422: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
-    readonly list_textbooks_api_textbooks_get: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    list_textbooks_api_textbooks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Successful Response */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["TextbookListResponse"];
+                    "application/json": components["schemas"]["TextbookListResponse"];
                 };
             };
             /** @description Bad Request */
-            readonly 400: {
+            400: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Not Found */
-            readonly 404: {
+            404: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Unprocessable Entity */
-            readonly 422: {
+            422: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
-    readonly upload_textbook_api_textbooks_upload_post: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    upload_textbook_api_textbooks_upload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: {
-            readonly content: {
-                readonly "multipart/form-data": components["schemas"]["Body_upload_textbook_api_textbooks_upload_post"];
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_textbook_api_textbooks_upload_post"];
             };
         };
-        readonly responses: {
+        responses: {
             /** @description Successful Response */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["TextbookUploadResponse"] | components["schemas"]["TextbookBatchUploadResponse"];
+                    "application/json": components["schemas"]["TextbookUploadResponse"] | components["schemas"]["TextbookBatchUploadResponse"];
                 };
             };
             /** @description Bad Request */
-            readonly 400: {
+            400: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Not Found */
-            readonly 404: {
+            404: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Unprocessable Entity */
-            readonly 422: {
+            422: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
-    readonly upload_textbooks_batch_api_textbooks_upload_batch_post: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    upload_textbooks_batch_api_textbooks_upload_batch_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "multipart/form-data": components["schemas"]["Body_upload_textbooks_batch_api_textbooks_upload_batch_post"];
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_textbooks_batch_api_textbooks_upload_batch_post"];
             };
         };
-        readonly responses: {
+        responses: {
             /** @description Successful Response */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["TextbookBatchUploadResponse"];
+                    "application/json": components["schemas"]["TextbookBatchUploadResponse"];
                 };
             };
             /** @description Bad Request */
-            readonly 400: {
+            400: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Not Found */
-            readonly 404: {
+            404: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Unprocessable Entity */
-            readonly 422: {
+            422: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
-    readonly parse_textbook_api_textbooks__raw_file_id__parse_post: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly raw_file_id: string;
-            };
-            readonly cookie?: never;
+    upload_textbook_async_api_textbooks_upload_async_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_textbook_async_api_textbooks_upload_async_post"];
+            };
+        };
+        responses: {
             /** @description Successful Response */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["TextbookUploadResponse"];
+                    "application/json": components["schemas"]["AsyncTextbookParseResponse"];
                 };
             };
             /** @description Bad Request */
-            readonly 400: {
+            400: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Not Found */
-            readonly 404: {
+            404: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Unprocessable Entity */
-            readonly 422: {
+            422: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
-    readonly get_textbook_api_textbooks__raw_file_id__get: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly raw_file_id: string;
+    parse_textbook_api_textbooks__raw_file_id__parse_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                raw_file_id: string;
             };
-            readonly cookie?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Successful Response */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ParsedTextbook"];
+                    "application/json": components["schemas"]["TextbookUploadResponse"];
                 };
             };
             /** @description Bad Request */
-            readonly 400: {
+            400: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Not Found */
-            readonly 404: {
+            404: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Unprocessable Entity */
-            readonly 422: {
+            422: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
-    readonly create_upload_session_api_uploads_sessions_post: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["UploadSessionCreateRequest"];
+    parse_textbook_async_api_textbooks__raw_file_id__parse_async_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                raw_file_id: string;
             };
+            cookie?: never;
         };
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Successful Response */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["UploadSessionRecord"];
+                    "application/json": components["schemas"]["AsyncTextbookParseResponse"];
                 };
             };
             /** @description Bad Request */
-            readonly 400: {
+            400: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Not Found */
-            readonly 404: {
+            404: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Unprocessable Entity */
-            readonly 422: {
+            422: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
-    readonly get_upload_session_api_uploads_sessions__session_id__get: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly session_id: string;
+    get_textbook_api_textbooks__raw_file_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                raw_file_id: string;
             };
-            readonly cookie?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Successful Response */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["UploadSessionRecord"];
+                    "application/json": components["schemas"]["ParsedTextbook"];
                 };
             };
             /** @description Bad Request */
-            readonly 400: {
+            400: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Not Found */
-            readonly 404: {
+            404: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Unprocessable Entity */
-            readonly 422: {
+            422: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
-    readonly upload_chunk_api_uploads_sessions__session_id__chunks__chunk_index__put: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly session_id: string;
-                readonly chunk_index: number;
-            };
-            readonly cookie?: never;
+    create_upload_session_api_uploads_sessions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "multipart/form-data": components["schemas"]["Body_upload_chunk_api_uploads_sessions__session_id__chunks__chunk_index__put"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UploadSessionCreateRequest"];
             };
         };
-        readonly responses: {
+        responses: {
             /** @description Successful Response */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["UploadChunkResponse"];
+                    "application/json": components["schemas"]["UploadSessionRecord"];
                 };
             };
             /** @description Bad Request */
-            readonly 400: {
+            400: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Not Found */
-            readonly 404: {
+            404: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Unprocessable Entity */
-            readonly 422: {
+            422: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
-    readonly complete_upload_session_api_uploads_sessions__session_id__complete_post: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly session_id: string;
+    get_upload_session_api_uploads_sessions__session_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
             };
-            readonly cookie?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Successful Response */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["UploadSessionCompleteResponse"];
+                    "application/json": components["schemas"]["UploadSessionRecord"];
                 };
             };
             /** @description Bad Request */
-            readonly 400: {
+            400: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Not Found */
-            readonly 404: {
+            404: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Unprocessable Entity */
-            readonly 422: {
+            422: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
-    readonly build_graph_api_graph_build_post: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    upload_chunk_api_uploads_sessions__session_id__chunks__chunk_index__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+                chunk_index: number;
+            };
+            cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["GraphBuildRequest"];
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_chunk_api_uploads_sessions__session_id__chunks__chunk_index__put"];
             };
         };
-        readonly responses: {
+        responses: {
             /** @description Successful Response */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["GraphBuildResponse"];
+                    "application/json": components["schemas"]["UploadChunkResponse"];
                 };
             };
             /** @description Bad Request */
-            readonly 400: {
+            400: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Not Found */
-            readonly 404: {
+            404: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Unprocessable Entity */
-            readonly 422: {
+            422: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
-    readonly get_graph_api_graph_get: {
-        readonly parameters: {
-            readonly query?: {
-                readonly mode?: "single";
-                readonly raw_file_id?: string | null;
-                readonly top_n?: number;
+    complete_upload_session_api_uploads_sessions__session_id__complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Successful Response */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["GraphResponse"];
+                    "application/json": components["schemas"]["UploadSessionCompleteResponse"];
                 };
             };
             /** @description Bad Request */
-            readonly 400: {
+            400: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Not Found */
-            readonly 404: {
+            404: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Unprocessable Entity */
-            readonly 422: {
+            422: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
-    readonly get_graph_node_api_graph_nodes__node_id__get: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly node_id: string;
+    complete_upload_session_async_api_uploads_sessions__session_id__complete_async_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
             };
-            readonly cookie?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Successful Response */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["GraphNodeDetailResponse"];
+                    "application/json": components["schemas"]["AsyncTextbookParseResponse"];
                 };
             };
             /** @description Bad Request */
-            readonly 400: {
+            400: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Not Found */
-            readonly 404: {
+            404: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Unprocessable Entity */
-            readonly 422: {
+            422: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
-    readonly get_job_api_jobs__job_id__get: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly job_id: string;
-            };
-            readonly cookie?: never;
+    build_graph_api_graph_build_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GraphBuildRequest"];
+            };
+        };
+        responses: {
             /** @description Successful Response */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["JobRecord"];
+                    "application/json": components["schemas"]["GraphBuildResponse"];
                 };
             };
             /** @description Bad Request */
-            readonly 400: {
+            400: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Not Found */
-            readonly 404: {
+            404: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Unprocessable Entity */
-            readonly 422: {
+            422: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    get_graph_api_graph_get: {
+        parameters: {
+            query?: {
+                mode?: "single";
+                raw_file_id?: string | null;
+                top_n?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    get_graph_node_api_graph_nodes__node_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphNodeDetailResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    get_job_api_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRecord"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    retry_job_api_jobs__job_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRetryResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
