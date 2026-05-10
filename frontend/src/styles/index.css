@@ -1,0 +1,8 @@
+@import "./tokens.css";
+@import "./global.css";
+@import "./scrollbar.css";
+@import "./animations.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
