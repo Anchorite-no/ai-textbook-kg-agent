@@ -35,3 +35,4 @@ data/jobs/*
 materials/textbooks/*.pdf
 materials/converted_textbooks/**
 *.pdf
+frontend/.git/
