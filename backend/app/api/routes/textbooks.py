@@ -16,7 +16,7 @@ from app.models.schemas import (
 from app.services.converted_textbook_importer import import_converted_textbook, stable_id
 from app.services.job_store import job_store
 from app.services.parsed_storage import list_parsed_textbooks, load_parsed_textbook
-from app.services.text_file_parser import SUPPORTED_TEXT_EXTENSIONS, parse_uploaded_text_file
+from app.services.uploaded_file_parser import parse_uploaded_file
 
 
 router = APIRouter(prefix="/textbooks", tags=["textbooks"])
@@ -42,10 +42,7 @@ async def upload_textbook(
 
     try:
         if uploaded_path is not None:
-            suffix = uploaded_path.suffix.lower()
-            if suffix not in SUPPORTED_TEXT_EXTENSIONS:
-                raise ValueError(f"当前计划 02 首批只支持 txt/md 上传，暂不支持 {suffix or 'unknown'}")
-            parsed, output_path = parse_uploaded_text_file(uploaded_path, original_filename=file.filename)
+            parsed, output_path = parse_uploaded_file(uploaded_path, original_filename=file.filename)
         else:
             parsed, output_path = import_converted_textbook(textbook_title=textbook_title)
     except Exception as exc:  # noqa: BLE001 - API must surface parser failures cleanly.
