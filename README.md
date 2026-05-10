@@ -64,6 +64,16 @@ $env:PYTHONPATH=(Resolve-Path backend).Path
 backend\.venv\Scripts\python.exe backend\scripts\smoke_phase2.py
 ```
 
+导出前后端契约快照：
+
+```powershell
+cd D:\Hackathon
+$env:PYTHONPATH=(Resolve-Path backend).Path
+backend\.venv\Scripts\python.exe backend\scripts\export_openapi.py
+```
+
+快照输出到 `docs\openapi.snapshot.json`。前端离线 codegen 使用该文件；live codegen 使用 `http://127.0.0.1:8010/openapi.json`。
+
 ## 前端启动
 
 ```powershell

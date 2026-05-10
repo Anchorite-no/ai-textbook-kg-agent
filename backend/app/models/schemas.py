@@ -248,6 +248,12 @@ class HealthResponse(ContractModel):
     checked_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+class ApiErrorResponse(ContractModel):
+    message: str
+    code: str
+    detail: str | None = None
+
+
 class JobStatus(str, Enum):
     queued = "queued"
     running = "running"

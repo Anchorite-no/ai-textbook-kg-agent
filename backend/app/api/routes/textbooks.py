@@ -25,6 +25,14 @@ from app.services.uploaded_file_parser import parse_uploaded_file
 router = APIRouter(prefix="/textbooks", tags=["textbooks"])
 
 
+def parse_failed_detail(message: str, detail: str | None = None) -> dict[str, str]:
+    return {
+        "message": message,
+        "code": "PARSE_FAILED",
+        "detail": detail or message,
+    }
+
+
 @router.get("", response_model=TextbookListResponse)
 def list_textbooks() -> TextbookListResponse:
     return TextbookListResponse(textbooks=list_parsed_textbooks())
@@ -81,7 +89,7 @@ def parse_textbook(raw_file_id: str) -> TextbookUploadResponse:
             message="教材导入失败",
             error=str(exc),
         )
-        raise HTTPException(status_code=400, detail=job.error) from exc
+        raise HTTPException(status_code=400, detail=parse_failed_detail("教材解析失败", job.error)) from exc
 
     return _complete_job(job_id, parsed, output_path, message="上传文件已重新解析为统一 JSON")
 
@@ -110,7 +118,7 @@ async def _run_single_upload(file: UploadFile, textbook_title: str | None) -> Te
             message="教材解析失败",
             error=str(exc),
         )
-        raise HTTPException(status_code=400, detail=job.error) from exc
+        raise HTTPException(status_code=400, detail=parse_failed_detail("教材解析失败", job.error)) from exc
     return _complete_job(job_id, parsed, output_path, message="上传文件已解析为统一 JSON")
 
 
@@ -128,7 +136,7 @@ def _run_converted_textbook_import(textbook_title: str | None) -> TextbookUpload
             message="教材导入失败",
             error=str(exc),
         )
-        raise HTTPException(status_code=400, detail=job.error) from exc
+        raise HTTPException(status_code=400, detail=parse_failed_detail("教材导入失败", job.error)) from exc
     return _complete_job(job_id, parsed, output_path, message="教材已导入并生成统一 JSON")
 
 

@@ -162,6 +162,17 @@ def run_api_smoke(samples: dict[str, Path]) -> None:
     assert reparse.status_code == 200, reparse.text
     assert reparse.json()["raw_file_id"] == raw_file_id
 
+    with samples["unsupported"].open("rb") as bad_single:
+        failed_upload = client.post(
+            "/api/textbooks/upload",
+            files={"file": ("legacy.doc", bad_single, "application/msword")},
+        )
+    assert failed_upload.status_code == 400, failed_upload.text
+    failed_payload = failed_upload.json()
+    assert failed_payload["message"] == "教材解析失败", failed_payload
+    assert failed_payload["code"] == "PARSE_FAILED", failed_payload
+    assert "LibreOffice" in failed_payload["detail"], failed_payload
+
     with samples["md"].open("rb") as md_handle, samples["unsupported"].open("rb") as bad_handle:
         batch = client.post(
             "/api/textbooks/upload-batch",

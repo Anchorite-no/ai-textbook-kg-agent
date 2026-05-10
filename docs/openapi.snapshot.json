@@ -1,0 +1,1335 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "学科知识整合智能体",
+    "description": "学科知识整合智能体 API：多格式解析、统一 JSON、证据链和任务状态接口。",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/textbooks": {
+      "get": {
+        "tags": [
+          "textbooks"
+        ],
+        "summary": "List Textbooks",
+        "operationId": "list_textbooks_api_textbooks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextbookListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/textbooks/upload": {
+      "post": {
+        "tags": [
+          "textbooks"
+        ],
+        "summary": "Upload Textbook",
+        "operationId": "upload_textbook_api_textbooks_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_textbook_api_textbooks_upload_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/TextbookUploadResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/TextbookBatchUploadResponse"
+                    }
+                  ],
+                  "title": "Response Upload Textbook Api Textbooks Upload Post"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/textbooks/upload-batch": {
+      "post": {
+        "tags": [
+          "textbooks"
+        ],
+        "summary": "Upload Textbooks Batch",
+        "operationId": "upload_textbooks_batch_api_textbooks_upload_batch_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_textbooks_batch_api_textbooks_upload_batch_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextbookBatchUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/textbooks/{raw_file_id}/parse": {
+      "post": {
+        "tags": [
+          "textbooks"
+        ],
+        "summary": "Parse Textbook",
+        "operationId": "parse_textbook_api_textbooks__raw_file_id__parse_post",
+        "parameters": [
+          {
+            "name": "raw_file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Raw File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextbookUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/textbooks/{raw_file_id}": {
+      "get": {
+        "tags": [
+          "textbooks"
+        ],
+        "summary": "Get Textbook",
+        "operationId": "get_textbook_api_textbooks__raw_file_id__get",
+        "parameters": [
+          {
+            "name": "raw_file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Raw File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParsedTextbook"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Get Job",
+        "operationId": "get_job_api_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApiErrorResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "code"
+        ],
+        "title": "ApiErrorResponse"
+      },
+      "Body_upload_textbook_api_textbooks_upload_post": {
+        "properties": {
+          "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File"
+          },
+          "files": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "contentMediaType": "application/octet-stream"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Files"
+          },
+          "textbook_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Textbook Title"
+          }
+        },
+        "type": "object",
+        "title": "Body_upload_textbook_api_textbooks_upload_post"
+      },
+      "Body_upload_textbooks_batch_api_textbooks_upload_batch_post": {
+        "properties": {
+          "files": {
+            "items": {
+              "type": "string",
+              "contentMediaType": "application/octet-stream"
+            },
+            "type": "array",
+            "title": "Files"
+          },
+          "textbook_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Textbook Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "Body_upload_textbooks_batch_api_textbooks_upload_batch_post"
+      },
+      "Chunk": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          },
+          "section_id": {
+            "type": "string",
+            "title": "Section Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "order_index": {
+            "type": "integer",
+            "title": "Order Index"
+          },
+          "char_start": {
+            "type": "integer",
+            "title": "Char Start"
+          },
+          "char_end": {
+            "type": "integer",
+            "title": "Char End"
+          },
+          "char_count": {
+            "type": "integer",
+            "title": "Char Count"
+          },
+          "source_locator": {
+            "$ref": "#/components/schemas/SourceLocator"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "raw_file_id",
+          "section_id",
+          "text",
+          "order_index",
+          "char_start",
+          "char_end",
+          "char_count",
+          "source_locator"
+        ],
+        "title": "Chunk"
+      },
+      "DocumentElement": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          },
+          "type": {
+            "$ref": "#/components/schemas/DocumentElementType"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "order_index": {
+            "type": "integer",
+            "title": "Order Index"
+          },
+          "parent_section_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Section Id"
+          },
+          "source_locator": {
+            "$ref": "#/components/schemas/SourceLocator"
+          },
+          "char_count": {
+            "type": "integer",
+            "title": "Char Count"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "raw_file_id",
+          "type",
+          "text",
+          "order_index",
+          "source_locator",
+          "char_count"
+        ],
+        "title": "DocumentElement"
+      },
+      "DocumentElementType": {
+        "type": "string",
+        "enum": [
+          "heading",
+          "paragraph",
+          "table",
+          "figure",
+          "list",
+          "page",
+          "slide",
+          "sheet",
+          "note"
+        ],
+        "title": "DocumentElementType"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status"
+          },
+          "app": {
+            "type": "string",
+            "title": "App"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checked At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "app",
+          "version"
+        ],
+        "title": "HealthResponse"
+      },
+      "JobRecord": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "job_type": {
+            "$ref": "#/components/schemas/JobType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "progress": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Progress",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "job_type",
+          "status"
+        ],
+        "title": "JobRecord"
+      },
+      "JobStatus": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "running",
+          "completed",
+          "failed"
+        ],
+        "title": "JobStatus"
+      },
+      "JobType": {
+        "type": "string",
+        "enum": [
+          "textbook_upload",
+          "textbook_batch_upload",
+          "textbook_parse",
+          "converted_textbook_import"
+        ],
+        "title": "JobType"
+      },
+      "ParsedTextbook": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "raw_file": {
+            "$ref": "#/components/schemas/RawFile"
+          },
+          "elements": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentElement"
+            },
+            "type": "array",
+            "title": "Elements"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/Section"
+            },
+            "type": "array",
+            "title": "Sections"
+          },
+          "chunks": {
+            "items": {
+              "$ref": "#/components/schemas/Chunk"
+            },
+            "type": "array",
+            "title": "Chunks"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "raw_file",
+          "elements",
+          "sections",
+          "chunks"
+        ],
+        "title": "ParsedTextbook"
+      },
+      "RawFile": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "original_filename": {
+            "type": "string",
+            "title": "Original Filename"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format"
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "uploaded",
+              "converted_textbook",
+              "generated"
+            ],
+            "title": "Source Type",
+            "default": "uploaded"
+          },
+          "storage_path": {
+            "type": "string",
+            "title": "Storage Path"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          },
+          "page_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Count"
+          },
+          "text_char_count": {
+            "type": "integer",
+            "title": "Text Char Count",
+            "default": 0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "original_filename",
+          "title",
+          "format",
+          "storage_path",
+          "sha256",
+          "size_bytes"
+        ],
+        "title": "RawFile"
+      },
+      "Section": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "section_type": {
+            "$ref": "#/components/schemas/SectionType",
+            "default": "section"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level",
+            "default": 1
+          },
+          "order_index": {
+            "type": "integer",
+            "title": "Order Index"
+          },
+          "parent_section_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Section Id"
+          },
+          "element_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Element Ids"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "char_count": {
+            "type": "integer",
+            "title": "Char Count"
+          },
+          "source_locator": {
+            "$ref": "#/components/schemas/SourceLocator"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "raw_file_id",
+          "title",
+          "order_index",
+          "element_ids",
+          "content",
+          "char_count",
+          "source_locator"
+        ],
+        "title": "Section"
+      },
+      "SectionType": {
+        "type": "string",
+        "enum": [
+          "chapter",
+          "section",
+          "page_window",
+          "slide",
+          "sheet",
+          "table"
+        ],
+        "title": "SectionType"
+      },
+      "SourceLocator": {
+        "properties": {
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          },
+          "source_path": {
+            "type": "string",
+            "title": "Source Path"
+          },
+          "source_type": {
+            "type": "string",
+            "title": "Source Type"
+          },
+          "locator_text": {
+            "type": "string",
+            "title": "Locator Text"
+          },
+          "page_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Start"
+          },
+          "page_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page End"
+          },
+          "line_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Start"
+          },
+          "line_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line End"
+          },
+          "sheet_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sheet Name"
+          },
+          "row_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Row Start"
+          },
+          "row_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Row End"
+          },
+          "slide_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide Number"
+          },
+          "char_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Char Start"
+          },
+          "char_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Char End"
+          },
+          "element_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Element Ids"
+          },
+          "quote_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Hash"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "raw_file_id",
+          "source_path",
+          "source_type",
+          "locator_text"
+        ],
+        "title": "SourceLocator"
+      },
+      "TextbookBatchUploadResponse": {
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/JobRecord"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TextbookUploadResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/TextbookUploadError"
+            },
+            "type": "array",
+            "title": "Errors"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          },
+          "success_count": {
+            "type": "integer",
+            "title": "Success Count"
+          },
+          "failed_count": {
+            "type": "integer",
+            "title": "Failed Count"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "job",
+          "items",
+          "total_count",
+          "success_count",
+          "failed_count"
+        ],
+        "title": "TextbookBatchUploadResponse"
+      },
+      "TextbookListResponse": {
+        "properties": {
+          "textbooks": {
+            "items": {
+              "$ref": "#/components/schemas/TextbookSummary"
+            },
+            "type": "array",
+            "title": "Textbooks"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "textbooks"
+        ],
+        "title": "TextbookListResponse"
+      },
+      "TextbookSummary": {
+        "properties": {
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format"
+          },
+          "page_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Count"
+          },
+          "element_count": {
+            "type": "integer",
+            "title": "Element Count"
+          },
+          "section_count": {
+            "type": "integer",
+            "title": "Section Count"
+          },
+          "chunk_count": {
+            "type": "integer",
+            "title": "Chunk Count"
+          },
+          "parsed_output_path": {
+            "type": "string",
+            "title": "Parsed Output Path"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "raw_file_id",
+          "title",
+          "format",
+          "element_count",
+          "section_count",
+          "chunk_count",
+          "parsed_output_path",
+          "updated_at"
+        ],
+        "title": "TextbookSummary"
+      },
+      "TextbookUploadError": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "job": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "filename",
+          "error"
+        ],
+        "title": "TextbookUploadError"
+      },
+      "TextbookUploadResponse": {
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/JobRecord"
+          },
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          },
+          "parsed_output_path": {
+            "type": "string",
+            "title": "Parsed Output Path"
+          },
+          "parsed_textbook": {
+            "$ref": "#/components/schemas/ParsedTextbook"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "job",
+          "raw_file_id",
+          "parsed_output_path",
+          "parsed_textbook"
+        ],
+        "title": "TextbookUploadResponse"
+      }
+    }
+  }
+}
