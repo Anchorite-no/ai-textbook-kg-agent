@@ -50,6 +50,7 @@ export interface UIState {
   searchKeyword: string;
   relationFilters: string[];
   reportGenerateTick: number;
+  workspaceRawFileIds: string[];
 
   // ---- actions ----
   setLeftWidth: (w: number) => void;
@@ -70,6 +71,8 @@ export interface UIState {
   setSearchKeyword: (k: string) => void;
   setRelationFilters: (filters: string[]) => void;
   requestReportGenerate: () => void;
+  setWorkspaceRawFileIds: (ids: string[]) => void;
+  clearWorkspaceRawFileIds: () => void;
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -96,6 +99,7 @@ export const useUIStore = create<UIState>()(
       searchKeyword: "",
       relationFilters: [],
       reportGenerateTick: 0,
+      workspaceRawFileIds: [],
 
       setLeftWidth: (w) => set({ leftWidth: clamp(w, LEFT_MIN, LEFT_MAX) }),
       setRightWidth: (w) => set({ rightWidth: clamp(w, RIGHT_MIN, RIGHT_MAX) }),
@@ -120,7 +124,9 @@ export const useUIStore = create<UIState>()(
       setSelectedDecisionId: (selectedDecisionId) => set({ selectedDecisionId }),
       setSearchKeyword: (searchKeyword) => set({ searchKeyword }),
       setRelationFilters: (relationFilters) => set({ relationFilters }),
-      requestReportGenerate: () => set((s) => ({ reportGenerateTick: s.reportGenerateTick + 1 }))
+      requestReportGenerate: () => set((s) => ({ reportGenerateTick: s.reportGenerateTick + 1 })),
+      setWorkspaceRawFileIds: (ids) => set({ workspaceRawFileIds: Array.from(new Set(ids)).sort() }),
+      clearWorkspaceRawFileIds: () => set({ workspaceRawFileIds: [] })
     }),
     {
       name: PERSIST_KEY,

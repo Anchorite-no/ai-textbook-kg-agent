@@ -19,6 +19,7 @@ export function LeftPanel() {
   const toggleLeftCollapsed = useUIStore((s) => s.toggleLeftCollapsed);
   const selectedTextbookId = useUIStore((s) => s.selectedTextbookId);
   const setSelectedTextbookId = useUIStore((s) => s.setSelectedTextbookId);
+  const setWorkspaceRawFileIds = useUIStore((s) => s.setWorkspaceRawFileIds);
   const workflowUseLLM = useUIStore((s) => s.workflowUseLLM);
   const { data: textbooks, isLoading } = useTextbooksQuery();
   const [showUpload, setShowUpload] = useState(false);
@@ -54,7 +55,10 @@ export function LeftPanel() {
         queryClient.invalidateQueries({ queryKey: ["dialogue-history"] })
       ]);
       const rawFileIds = rawIdsFromJob(job.result);
-      if (rawFileIds[0]) setSelectedTextbookId(rawFileIds[0]);
+      if (rawFileIds.length) {
+        setWorkspaceRawFileIds(rawFileIds);
+        setSelectedTextbookId(rawFileIds[0]);
+      }
       setShowUpload(false);
       toastStore.push({
         tone: "success",

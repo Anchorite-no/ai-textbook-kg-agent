@@ -30,6 +30,7 @@ export function TopBar() {
   const theme = useUIStore((s) => s.theme);
   const setTheme = useUIStore((s) => s.setTheme);
   const setSelectedTextbookId = useUIStore((s) => s.setSelectedTextbookId);
+  const setWorkspaceRawFileIds = useUIStore((s) => s.setWorkspaceRawFileIds);
   const setActiveRightTab = useUIStore((s) => s.setActiveRightTab);
   const requestReportGenerate = useUIStore((s) => s.requestReportGenerate);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -69,7 +70,10 @@ export function TopBar() {
         queryClient.invalidateQueries({ queryKey: ["integration"] }),
         queryClient.invalidateQueries({ queryKey: ["rag"] })
       ]);
-      if (rawFileIds[0]) setSelectedTextbookId(rawFileIds[0]);
+      if (rawFileIds.length) {
+        setWorkspaceRawFileIds(rawFileIds);
+        setSelectedTextbookId(rawFileIds[0]);
+      }
       toastStore.push({
         tone: "success",
         title: prepared ? "七本书数据集已准备" : "七本书数据集已载入",
