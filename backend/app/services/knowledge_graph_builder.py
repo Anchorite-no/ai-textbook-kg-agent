@@ -22,13 +22,77 @@ from app.services.llm_client import llm_client
 from app.services.parsed_storage import load_parsed_textbook
 
 
-PROMPT_VERSION = "kg_extract_v2"
+PROMPT_VERSION = "kg_extract_v3"
 MAX_SECTION_CHARS = 3000
+LLM_MIN_GROUNDED_NODES = 3
 TERM_PATTERN = re.compile(
     r"[\u4e00-\u9fa5A-Za-z0-9]{2,24}?(?:"
     r"电位|传导|细胞|组织|器官|系统|结构|功能|机制|过程|反应|作用|疾病|症状|诊断|治疗|"
     r"病变|炎症|感染|免疫|病毒|细菌|解剖|生理|病理|血管|神经|肌肉|淋巴|膜电位"
     r")"
+)
+KNOWN_COMPOUND_TERM_PATTERN = re.compile(
+    r"动作电位|静息电位|膜电位|神经传导|炎症反应|免疫反应|病理变化|发病机制|"
+    r"血液循环|细胞死亡|细胞损伤|适应性变化|临床医学|基础医学|病理诊断|"
+    r"病理学|解剖学|组织胚胎学|生理学|医学微生物学"
+)
+PAREN_TERM_PATTERN = re.compile(r"([\u4e00-\u9fff][\u4e00-\u9fffA-Za-z0-9]{1,15})[（(][A-Za-z][^）)]{1,80}[）)]")
+DEFINITION_TERM_PATTERN = re.compile(
+    r"(?:^|[。；：:\n])\s*([\u4e00-\u9fffA-Za-z0-9]{2,18})(?:[（(][^）)]{1,80}[）)])?\s*(?:是指|是|指|称为|简称)"
+)
+BAD_TERM_PREFIXES = (
+    "中的",
+    "也与",
+    "但",
+    "而",
+    "并",
+    "其",
+    "该",
+    "它",
+    "这些",
+    "这种",
+    "作为",
+    "从",
+    "在",
+    "由",
+    "与",
+    "和",
+    "或",
+    "及",
+    "可以",
+    "用于",
+    "组成",
+    "都是",
+    "是一种",
+    "是",
+)
+BAD_TERM_FRAGMENTS = (
+    "第一部",
+    "从无到有",
+    "人格魅力",
+    "人们可以",
+    "严重者",
+    "学习中",
+    "本书",
+)
+BAD_TERM_VERBS = (
+    "研究",
+    "应用",
+    "编著",
+    "激励",
+    "提供",
+    "进行",
+    "记录",
+    "认为",
+    "学习",
+    "掌握",
+    "成为",
+    "导致",
+    "转化",
+    "表达",
+    "丧失",
+    "推动",
+    "解释",
 )
 
 
@@ -41,6 +105,9 @@ class NodeDraft:
     chunk: Chunk
     source_quote_verified: bool
     evidence_strategy: str
+    aliases: tuple[str, ...] = ()
+    extraction_method: str = "fallback"
+    confidence: float = 0.62
 
 
 @dataclass(frozen=True)
@@ -53,6 +120,8 @@ class EdgeDraft:
     chunk: Chunk
     source_quote_verified: bool
     evidence_strategy: str
+    extraction_method: str = "fallback"
+    confidence: float = 0.55
 
 
 def build_knowledge_graph(request: GraphBuildRequest) -> tuple[GraphResponse, str, bool]:
@@ -71,7 +140,10 @@ def build_knowledge_graph(request: GraphBuildRequest) -> tuple[GraphResponse, st
     llm_cache_hits = 0
     llm_calls = 0
     llm_errors = 0
+    llm_sections = 0
+    llm_grounded_sections = 0
     fallback_sections = 0
+    supplemented_sections = 0
 
     for section in sections:
         section_chunks = chunks_by_section.get(section.id) or []
@@ -85,7 +157,7 @@ def build_knowledge_graph(request: GraphBuildRequest) -> tuple[GraphResponse, st
             if llm_payload is not None:
                 llm_cache_hits += 1
             else:
-                prompt = _build_prompt(section, text)
+                prompt = _build_prompt(section, text, request.max_nodes_per_section)
                 try:
                     llm_payload = llm_client.extract_json(prompt)
                 except Exception:
@@ -96,7 +168,16 @@ def build_knowledge_graph(request: GraphBuildRequest) -> tuple[GraphResponse, st
                     llm_cache.set(cache_key, llm_payload)
 
         if llm_payload is not None:
+            llm_sections += 1
             node_drafts, edge_drafts = _drafts_from_llm(llm_payload, section_chunks, section)
+            if len(node_drafts) >= min(LLM_MIN_GROUNDED_NODES, request.max_nodes_per_section) and edge_drafts:
+                llm_grounded_sections += 1
+            else:
+                fallback_sections += 1
+                supplemented_sections += 1
+                fallback_nodes, fallback_edges = _fallback_drafts(section, section_chunks, request.max_nodes_per_section)
+                node_drafts = _merge_node_drafts(node_drafts, fallback_nodes, request.max_nodes_per_section)
+                edge_drafts = _merge_edge_drafts(edge_drafts, fallback_edges)
         else:
             fallback_sections += 1
             node_drafts, edge_drafts = _fallback_drafts(section, section_chunks, request.max_nodes_per_section)
@@ -133,7 +214,10 @@ def build_knowledge_graph(request: GraphBuildRequest) -> tuple[GraphResponse, st
             "llm_cache_hits": llm_cache_hits,
             "llm_calls": llm_calls,
             "llm_errors": llm_errors,
+            "llm_sections": llm_sections,
+            "llm_grounded_sections": llm_grounded_sections,
             "fallback_sections": fallback_sections,
+            "supplemented_sections": supplemented_sections,
             "fallback_used": fallback_sections > 0,
         },
     )
@@ -160,15 +244,40 @@ def _section_text(section: Section, chunks: list[Chunk]) -> str:
     return joined[:MAX_SECTION_CHARS] or section.content[:MAX_SECTION_CHARS]
 
 
-def _build_prompt(section: Section, text: str) -> str:
+def _build_prompt(section: Section, text: str, max_nodes: int) -> str:
     return f"""你是教材知识图谱抽取器。
 只基于给定章节内容抽取核心知识点和关系。
 输出严格 JSON，不要输出 Markdown。
-节点必须包含 name、definition、category、source_quote。
-关系必须包含 source、target、relation_type、description、source_quote。
-relation_type 只能是 prerequisite、parallel、contains、applies_to、causes、leads_to、explains、is_a、part_of、contrasts_with。
-source_quote 必须是章节内容中的原文短句，不允许改写。
-如果证据不足，不要编造关系。
+
+输出格式必须是：
+{{
+  "nodes": [
+    {{
+      "name": "2到16字的教材术语，不要整句",
+      "definition": "只基于原文的一句话定义或解释",
+      "category": "结构|功能|机制过程|疾病病理|病原体|诊断治疗|核心概念",
+      "aliases": ["可选同义名"],
+      "source_quote": "章节内容里的原文短句"
+    }}
+  ],
+  "edges": [
+    {{
+      "source": "节点 name",
+      "target": "节点 name",
+      "relation_type": "prerequisite|parallel|contains|applies_to|causes|leads_to|explains|is_a|part_of|contrasts_with",
+      "description": "只基于原文说明二者关系",
+      "source_quote": "章节内容里的原文短句"
+    }}
+  ]
+}}
+
+抽取规则：
+1. 最多抽取 {max_nodes} 个节点、{max(3, max_nodes)} 条关系。
+2. name 必须是教材知识点，不能是页码、题注、章节标题整句、学习目标、扫描图片提示。
+3. source_quote 必须是章节内容中的原文短句，不允许改写；证据不足就不要输出。
+4. 优先抽取定义明确、可教学、可跨教材对齐的概念。
+5. 如果原文支持，至少覆盖 prerequisite、contains、part_of、causes、explains、contrasts_with 中的 3 类关系；不支持就少输出。
+6. 不要引入章节内容外的医学常识。
 
 章节标题：{section.title}
 章节内容：
@@ -178,33 +287,47 @@ source_quote 必须是章节内容中的原文短句，不允许改写。
 
 def _drafts_from_llm(payload: dict[str, Any], chunks: list[Chunk], section: Section) -> tuple[list[NodeDraft], list[EdgeDraft]]:
     node_drafts: list[NodeDraft] = []
-    for item in payload.get("nodes", []):
+    for item in _list_field(payload, "nodes", "concepts", "knowledge_points", "知识点", "节点"):
         if not isinstance(item, dict):
             continue
-        name = str(item.get("name") or "").strip()
-        if not name:
+        name = _clean_term(str(item.get("name") or item.get("term") or item.get("concept") or "").strip())
+        if not _is_good_concept_name(name):
             continue
         quote = str(item.get("source_quote") or item.get("definition") or name)
         chunk, grounded_quote, verified, strategy = _ground_evidence(chunks, quote, name)
+        if not verified:
+            continue
+        aliases = tuple(
+            alias
+            for alias in (_clean_term(str(raw_alias)) for raw_alias in _list_field(item, "aliases", "alias", "同义词"))
+            if alias and alias != name and _is_good_concept_name(alias)
+        )
+        definition = _trim_quote(str(item.get("definition") or _definition_for_term(name, chunk.text)), 240)
         node_drafts.append(
             NodeDraft(
                 name=name,
-                definition=str(item.get("definition") or _definition_for_term(name, chunk.text)),
-                category=str(item.get("category") or "核心概念"),
+                definition=definition,
+                category=_normalize_category(str(item.get("category") or "核心概念")),
                 source_quote=grounded_quote,
                 chunk=chunk,
                 source_quote_verified=verified,
                 evidence_strategy=strategy,
+                aliases=aliases,
+                extraction_method="llm",
+                confidence=0.78,
             )
         )
 
     edge_drafts: list[EdgeDraft] = []
-    for item in payload.get("edges", []):
+    node_names = {_normalize_name(draft.name) for draft in node_drafts}
+    for item in _list_field(payload, "edges", "relations", "relationships", "关系", "边"):
         if not isinstance(item, dict):
             continue
-        source_name = str(item.get("source") or "").strip()
-        target_name = str(item.get("target") or "").strip()
+        source_name = _clean_term(str(item.get("source") or item.get("source_name") or item.get("from") or "").strip())
+        target_name = _clean_term(str(item.get("target") or item.get("target_name") or item.get("to") or "").strip())
         if not source_name or not target_name:
+            continue
+        if _normalize_name(source_name) not in node_names or _normalize_name(target_name) not in node_names:
             continue
         quote = str(item.get("source_quote") or item.get("description") or section.title)
         chunk, grounded_quote, verified, strategy = _ground_evidence(chunks, quote, source_name, target_name)
@@ -220,6 +343,8 @@ def _drafts_from_llm(payload: dict[str, Any], chunks: list[Chunk], section: Sect
                 chunk=chunk,
                 source_quote_verified=verified,
                 evidence_strategy=strategy,
+                extraction_method="llm",
+                confidence=0.72,
             )
         )
     return node_drafts, edge_drafts
@@ -231,6 +356,8 @@ def _fallback_drafts(section: Section, chunks: list[Chunk], max_nodes: int) -> t
     node_drafts: list[NodeDraft] = []
     for name in names:
         chunk, quote, verified, strategy = _ground_evidence(chunks, _definition_for_term(name, text), name)
+        if not verified:
+            continue
         node_drafts.append(
             NodeDraft(
                 name=name,
@@ -242,19 +369,34 @@ def _fallback_drafts(section: Section, chunks: list[Chunk], max_nodes: int) -> t
                 evidence_strategy=strategy,
             )
         )
-    edge_drafts = _fallback_edges(names, text, chunks)
+    edge_drafts = _fallback_edges([draft.name for draft in node_drafts], text, chunks)
     return node_drafts, edge_drafts
 
 
 def _candidate_terms(title: str, text: str) -> list[str]:
     candidates: list[str] = []
-    for raw in [title, *TERM_PATTERN.findall(text)]:
+    raw_terms = [
+        title,
+        *KNOWN_COMPOUND_TERM_PATTERN.findall(text),
+        *_parenthetical_terms(text),
+        *_definition_terms(text),
+        *TERM_PATTERN.findall(text),
+    ]
+    for raw in raw_terms:
         name = _clean_term(raw)
-        if not name or len(name) < 2 or len(name) > 24:
+        if not _is_good_concept_name(name):
             continue
         if name not in candidates:
             candidates.append(name)
     return candidates
+
+
+def _parenthetical_terms(text: str) -> list[str]:
+    return [match.group(1) for match in PAREN_TERM_PATTERN.finditer(text)]
+
+
+def _definition_terms(text: str) -> list[str]:
+    return [match.group(1) for match in DEFINITION_TERM_PATTERN.finditer(text)]
 
 
 def _fallback_edges(names: list[str], text: str, chunks: list[Chunk]) -> list[EdgeDraft]:
@@ -326,6 +468,32 @@ def _fallback_edges(names: list[str], text: str, chunks: list[Chunk]) -> list[Ed
     return edges
 
 
+def _merge_node_drafts(primary: list[NodeDraft], fallback: list[NodeDraft], max_nodes: int) -> list[NodeDraft]:
+    merged: list[NodeDraft] = []
+    seen: set[str] = set()
+    for draft in [*primary, *fallback]:
+        key = _normalize_name(draft.name)
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        merged.append(draft)
+        if len(merged) >= max_nodes:
+            break
+    return merged
+
+
+def _merge_edge_drafts(primary: list[EdgeDraft], fallback: list[EdgeDraft]) -> list[EdgeDraft]:
+    merged: list[EdgeDraft] = []
+    seen: set[tuple[str, str, KnowledgeRelationType]] = set()
+    for draft in [*primary, *fallback]:
+        key = (_normalize_name(draft.source_name), _normalize_name(draft.target_name), draft.relation_type)
+        if key[0] == key[1] or key in seen:
+            continue
+        seen.add(key)
+        merged.append(draft)
+    return merged
+
+
 def _prerequisite_edge(names: list[str], text: str, chunks: list[Chunk]) -> EdgeDraft | None:
     if not any(marker in text for marker in ("基础", "前提", "依赖", "需要先")):
         return None
@@ -335,17 +503,35 @@ def _prerequisite_edge(names: list[str], text: str, chunks: list[Chunk]) -> Edge
                 continue
             sentence = _sentence_with_terms(text, source, target)
             if sentence and any(marker in sentence for marker in ("基础", "前提", "依赖", "需要先")):
+                source_name, target_name = _orient_prerequisite(source, target, sentence)
                 return EdgeDraft(
-                    source_name=source,
-                    target_name=target,
+                    source_name=source_name,
+                    target_name=target_name,
                     relation_type=KnowledgeRelationType.prerequisite_of,
-                    description=f"理解 {target} 需要先掌握 {source}。",
+                    description=f"理解 {target_name} 需要先掌握 {source_name}。",
                     source_quote=sentence,
                     chunk=_chunk_for_quote(chunks, sentence),
                     source_quote_verified=True,
                     evidence_strategy="fallback_sentence",
                 )
     return None
+
+
+def _orient_prerequisite(source: str, target: str, sentence: str) -> tuple[str, str]:
+    compact = re.sub(r"\s+", "", sentence)
+    if re.search(re.escape(source) + r".{0,8}是" + re.escape(target) + r".{0,8}(基础|前提)", compact):
+        return source, target
+    if re.search(re.escape(target) + r".{0,8}是" + re.escape(source) + r".{0,8}(基础|前提)", compact):
+        return target, source
+    if re.search(r"(学习|理解|掌握)" + re.escape(target) + r".{0,20}" + re.escape(source) + r".{0,8}(基础|前提)", compact):
+        return source, target
+    if re.search(r"(学习|理解|掌握)" + re.escape(source) + r".{0,20}" + re.escape(target) + r".{0,8}(基础|前提)", compact):
+        return target, source
+    if re.search(re.escape(target) + r".{0,8}以" + re.escape(source) + r".{0,8}为(基础|前提)", compact):
+        return source, target
+    if re.search(re.escape(source) + r".{0,8}以" + re.escape(target) + r".{0,8}为(基础|前提)", compact):
+        return target, source
+    return source, target
 
 
 def _keyword_edge(
@@ -381,13 +567,17 @@ def _merge_node(parsed: ParsedTextbook, section: Section, draft: NodeDraft, node
     existing = node_by_name.get(key)
     if existing is not None:
         evidence = list(dict.fromkeys([*existing.evidence_chunk_ids, draft.chunk.id]))
+        aliases = list(dict.fromkeys([*existing.aliases, *draft.aliases]))
         frequency = int(existing.metadata.get("frequency", 1)) + 1
         updated = existing.model_copy(
             update={
+                "aliases": aliases,
                 "evidence_chunk_ids": evidence,
+                "confidence": max(existing.confidence, draft.confidence),
                 "metadata": {
                     **existing.metadata,
                     "frequency": frequency,
+                    "extraction_method": _merge_extraction_method(str(existing.metadata.get("extraction_method", "")), draft.extraction_method),
                 },
             }
         )
@@ -399,10 +589,10 @@ def _merge_node(parsed: ParsedTextbook, section: Section, draft: NodeDraft, node
         name=draft.name,
         node_type=_node_type_for_term(draft.name),
         definition=draft.definition,
-        aliases=[],
+        aliases=list(draft.aliases),
         source_locator=draft.chunk.source_locator,
         evidence_chunk_ids=[draft.chunk.id],
-        confidence=0.62,
+        confidence=draft.confidence,
         metadata={
             "category": draft.category,
             "chapter": section.title,
@@ -410,12 +600,20 @@ def _merge_node(parsed: ParsedTextbook, section: Section, draft: NodeDraft, node
             "source_quote": _trim_quote(draft.source_quote),
             "source_quote_verified": draft.source_quote_verified,
             "evidence_strategy": draft.evidence_strategy,
+            "extraction_method": draft.extraction_method,
             "frequency": 1,
             "section_id": section.id,
         },
     )
     node_by_name[key] = node
     return node
+
+
+def _merge_extraction_method(existing: str, new: str) -> str:
+    methods = [method for method in existing.split("+") if method]
+    if new and new not in methods:
+        methods.append(new)
+    return "+".join(methods) if methods else new
 
 
 def _build_edge(parsed: ParsedTextbook, draft: EdgeDraft, source_id: str, target_id: str) -> KnowledgeEdge:
@@ -427,11 +625,12 @@ def _build_edge(parsed: ParsedTextbook, draft: EdgeDraft, source_id: str, target
         description=draft.description,
         source_locator=draft.chunk.source_locator,
         evidence_chunk_ids=[draft.chunk.id],
-        confidence=0.55,
+        confidence=draft.confidence,
         metadata={
             "source_quote": _trim_quote(draft.source_quote),
             "source_quote_verified": draft.source_quote_verified,
             "evidence_strategy": draft.evidence_strategy,
+            "extraction_method": draft.extraction_method,
             "plan3_relation_type": _plan3_relation_name(draft.relation_type),
         },
     )
@@ -493,48 +692,53 @@ def _sentence_with_terms_and_markers(text: str, markers: tuple[str, ...], *terms
 
 
 def _category_for_term(term: str) -> str:
-    if any(marker in term for marker in ("疾病", "炎", "病")):
-        return "疾病与病理"
-    if any(marker in term for marker in ("结构", "细胞", "组织", "器官", "系统", "血管", "神经", "肌肉")):
-        return "结构"
     if any(marker in term for marker in ("功能", "机制", "过程", "反应", "作用")):
         return "机制过程"
+    if any(marker in term for marker in ("结构", "细胞", "组织", "器官", "系统", "血管", "神经", "肌肉")):
+        return "结构"
+    if any(marker in term for marker in ("疾病", "炎症", "病变", "肿瘤", "癌")):
+        return "疾病与病理"
     return "核心概念"
 
 
 def _node_type_for_term(term: str) -> KnowledgeNodeType:
-    if any(marker in term for marker in ("疾病", "炎", "病")):
-        return KnowledgeNodeType.disease
-    if any(marker in term for marker in ("结构", "细胞", "组织", "器官", "系统", "血管", "神经", "肌肉")):
-        return KnowledgeNodeType.structure
-    if any(marker in term for marker in ("机制", "过程", "反应")):
+    if "机制" in term:
+        return KnowledgeNodeType.mechanism
+    if any(marker in term for marker in ("过程", "反应")):
         return KnowledgeNodeType.process
     if "功能" in term or "作用" in term:
         return KnowledgeNodeType.function
+    if any(marker in term for marker in ("结构", "细胞", "组织", "器官", "系统", "血管", "神经", "肌肉")):
+        return KnowledgeNodeType.structure
+    if any(marker in term for marker in ("疾病", "炎症", "病变", "肿瘤", "癌")):
+        return KnowledgeNodeType.disease
     return KnowledgeNodeType.concept
 
 
 def _relation_from_text(value: str) -> KnowledgeRelationType:
-    normalized = value.strip().lower()
-    if normalized in {"prerequisite", "prerequisite_of"}:
+    normalized = re.sub(r"[\s\-]+", "_", value.strip().lower())
+    enum_by_value = {item.value.lower(): item for item in KnowledgeRelationType}
+    if normalized in enum_by_value:
+        return enum_by_value[normalized]
+    if normalized in {"prerequisite", "prerequisite_of", "先修", "前置", "前置知识", "基础", "依赖"}:
         return KnowledgeRelationType.prerequisite_of
-    if normalized in {"parallel", "parallel_with"}:
+    if normalized in {"parallel", "parallel_with", "并列", "并行"}:
         return KnowledgeRelationType.parallel_with
-    if normalized in {"contains", "contain"}:
+    if normalized in {"contains", "contain", "包含"}:
         return KnowledgeRelationType.contains
-    if normalized in {"is_a", "isa", "is-a"}:
+    if normalized in {"is_a", "isa", "是一种", "属于"}:
         return KnowledgeRelationType.is_a
-    if normalized in {"part_of", "partof", "part-of"}:
+    if normalized in {"part_of", "partof", "组成", "部分"}:
         return KnowledgeRelationType.part_of
-    if normalized in {"applies_to", "apply"}:
+    if normalized in {"applies_to", "apply", "应用", "作用于"}:
         return KnowledgeRelationType.applies_to
-    if normalized in {"contrasts_with", "contrast", "contrasts"}:
+    if normalized in {"contrasts_with", "contrast", "contrasts", "区别", "对比"}:
         return KnowledgeRelationType.contrasts_with
-    if normalized in {"causes", "cause"}:
+    if normalized in {"causes", "cause", "导致", "引起"}:
         return KnowledgeRelationType.causes
-    if normalized in {"leads_to", "lead_to"}:
+    if normalized in {"leads_to", "lead_to", "进而", "结果"}:
         return KnowledgeRelationType.leads_to
-    if normalized in {"explains", "explain"}:
+    if normalized in {"explains", "explain", "解释", "说明"}:
         return KnowledgeRelationType.explains
     return KnowledgeRelationType.mentioned_in
 
@@ -574,7 +778,66 @@ def _plan3_relation_name(relation_type: KnowledgeRelationType) -> str:
 
 
 def _clean_term(term: str) -> str:
-    return re.sub(r"^[第\d一二三四五六七八九十百章节篇、\s.．]+", "", term).strip(" ：:，,。；;（）()[]【】")
+    cleaned = re.sub(r"\s+", " ", term.replace("\n", " ")).strip()
+    cleaned = re.sub(r"^[第\d一二三四五六七八九十百章节篇、\s.．]+", "", cleaned)
+    for marker in ("被称为", "称为", "叫做"):
+        if marker in cleaned and not cleaned.endswith(marker):
+            cleaned = cleaned.split(marker)[-1].strip()
+    for prefix in ("但严重者可导致", "严重者可导致", "可导致", "导致", "中的", "也与"):
+        if cleaned.startswith(prefix):
+            cleaned = cleaned[len(prefix) :].strip()
+    return cleaned.strip(" ：:，,。；;（）()[]【】\"'")
+
+
+def _is_good_concept_name(name: str) -> bool:
+    if not name or len(name) < 2 or len(name) > 40:
+        return False
+    if re.fullmatch(r"\d{1,4}", name):
+        return False
+    if name.startswith(BAD_TERM_PREFIXES):
+        return False
+    if name.endswith(("都", "时", "者", "的特征")):
+        return False
+    if any(fragment in name for fragment in BAD_TERM_FRAGMENTS):
+        return False
+    if len(name) > 8 and any(verb in name for verb in BAD_TERM_VERBS):
+        return False
+    if len(name) > 10 and name.count("的") >= 2:
+        return False
+    if any(marker in name for marker in ("扫描图片", "体验AR", "学习目标", "复习思考题", "本章小结", "目录")):
+        return False
+    if re.search(r"[。！？；;，,]", name):
+        return False
+    if len(name) > 18 and not re.search(r"[A-Za-z]", name):
+        return False
+    return bool(re.search(r"[\u4e00-\u9fffA-Za-z]", name))
+
+
+def _list_field(payload: dict[str, Any], *keys: str) -> list[Any]:
+    for key in keys:
+        value = payload.get(key)
+        if isinstance(value, list):
+            return value
+        if isinstance(value, str) and value.strip():
+            return [value]
+    return []
+
+
+def _normalize_category(category: str) -> str:
+    normalized = category.strip()
+    if any(marker in normalized for marker in ("结构", "组织", "器官", "细胞")):
+        return "结构"
+    if any(marker in normalized for marker in ("功能", "作用")):
+        return "功能"
+    if any(marker in normalized for marker in ("机制", "过程", "反应")):
+        return "机制过程"
+    if any(marker in normalized for marker in ("疾病", "病理", "病变", "炎症")):
+        return "疾病病理"
+    if any(marker in normalized for marker in ("病原", "病毒", "细菌")):
+        return "病原体"
+    if any(marker in normalized for marker in ("诊断", "治疗")):
+        return "诊断治疗"
+    return "核心概念"
 
 
 def _normalize_name(name: str) -> str:

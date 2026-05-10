@@ -47,6 +47,17 @@ PATH_RELATIONS = {
     KnowledgeRelationType.contrasts_with,
     KnowledgeRelationType.applies_to,
 }
+PATH_RELATION_PRIORITY = {
+    KnowledgeRelationType.prerequisite_of: 0,
+    KnowledgeRelationType.causes: 1,
+    KnowledgeRelationType.leads_to: 2,
+    KnowledgeRelationType.explains: 3,
+    KnowledgeRelationType.applies_to: 4,
+    KnowledgeRelationType.part_of: 5,
+    KnowledgeRelationType.is_a: 6,
+    KnowledgeRelationType.contrasts_with: 7,
+    KnowledgeRelationType.contains: 8,
+}
 PREREQUISITE_RELATIONS = {KnowledgeRelationType.prerequisite_of}
 RELATION_INTENT_MARKERS = ("关系", "之间", "路径", "联系")
 COMPARISON_MARKERS = ("差异", "不同", "区别", "对比", "两本教材", "说法")
@@ -567,7 +578,8 @@ def _shortest_edge_path(
         current, path = queue.popleft()
         if len(path) >= max_depth:
             continue
-        for edge in [*context.adjacency.get(current, []), *context.reverse_adjacency.get(current, [])]:
+        edges = [*context.adjacency.get(current, []), *context.reverse_adjacency.get(current, [])]
+        for edge in sorted(edges, key=lambda item: (PATH_RELATION_PRIORITY.get(item.relation_type, 99), -item.confidence)):
             if edge.relation_type not in PATH_RELATIONS:
                 continue
             next_id = edge.target_node_id if edge.source_node_id == current else edge.source_node_id
