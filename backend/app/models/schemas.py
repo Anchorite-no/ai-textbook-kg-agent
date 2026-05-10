@@ -362,7 +362,58 @@ class IntegrationDecision(ContractModel):
     reason: str
     confidence: float = Field(ge=0, le=1, default=0.0)
     evidence_chunk_ids: list[str] = Field(default_factory=list)
+    source_locators: list[SourceLocator] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class CompressionStats(ContractModel):
+    original_char_count: int = Field(ge=0)
+    retained_char_count: int = Field(ge=0)
+    original_node_count: int = Field(ge=0)
+    integrated_node_count: int = Field(ge=0)
+    merged_node_count: int = Field(ge=0)
+    kept_node_count: int = Field(ge=0)
+    removed_node_count: int = Field(ge=0)
+    refined_node_count: int = Field(ge=0)
+    conflict_count: int = Field(ge=0)
+    target_compression_ratio: float = Field(ge=0, le=1)
+    compression_ratio: float = Field(ge=0)
+    node_reduction_ratio: float = Field(ge=0, le=1, default=0.0)
+    evidence_coverage_ratio: float = Field(ge=0, le=1, default=0.0)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class IntegratedConcept(ContractModel):
+    id: str
+    canonical_name: str
+    member_node_ids: list[str] = Field(default_factory=list)
+    decision_ids: list[str] = Field(default_factory=list)
+    definition: str
+    summary: str | None = None
+    source_locators: list[SourceLocator] = Field(default_factory=list)
+    evidence_chunk_ids: list[str] = Field(default_factory=list)
+    confidence: float = Field(ge=0, le=1, default=0.0)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class IntegrationBuildRequest(ContractModel):
+    raw_file_ids: list[str] = Field(default_factory=list)
+    force_rebuild: bool = False
+    target_compression_ratio: float = Field(default=0.30, gt=0, le=0.80)
+    alignment_min_confidence: float = Field(default=0.62, ge=0, le=1)
+    include_keep_decisions: bool = True
+    max_nodes: int = Field(default=1000, ge=2, le=10000)
+
+
+class IntegrationResponse(ContractModel):
+    id: str
+    raw_file_ids: list[str] = Field(default_factory=list)
+    alignment_id: str | None = None
+    decisions: list[IntegrationDecision] = Field(default_factory=list)
+    integrated_concepts: list[IntegratedConcept] = Field(default_factory=list)
+    compression_stats: CompressionStats
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -482,6 +533,7 @@ class JobType(str, Enum):
     graph_build = "graph_build"
     layered_kg_build = "layered_kg_build"
     alignment_build = "alignment_build"
+    integration_build = "integration_build"
     rag_index = "rag_index"
     converted_textbook_import = "converted_textbook_import"
 
@@ -546,6 +598,12 @@ class AlignmentBuildResponse(ContractModel):
     job: JobRecord
     alignment_output_path: str
     alignment: AlignmentResponse
+
+
+class IntegrationBuildResponse(ContractModel):
+    job: JobRecord
+    integration_output_path: str
+    integration: IntegrationResponse
 
 
 class RagIndexResponse(ContractModel):

@@ -1286,6 +1286,136 @@
         }
       }
     },
+    "/api/integration/build": {
+      "post": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Build Integration Decisions",
+        "operationId": "build_integration_decisions_api_integration_build_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntegrationBuildRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationBuildResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration": {
+      "get": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Get Integration",
+        "operationId": "get_integration_api_integration_get",
+        "parameters": [
+          {
+            "name": "raw_file_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Raw File Ids"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
     "/api/rag/index": {
       "post": {
         "tags": [
@@ -2193,6 +2323,101 @@
         ],
         "title": "Chunk"
       },
+      "CompressionStats": {
+        "properties": {
+          "original_char_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Original Char Count"
+          },
+          "retained_char_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Retained Char Count"
+          },
+          "original_node_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Original Node Count"
+          },
+          "integrated_node_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Integrated Node Count"
+          },
+          "merged_node_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Merged Node Count"
+          },
+          "kept_node_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Kept Node Count"
+          },
+          "removed_node_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Removed Node Count"
+          },
+          "refined_node_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Refined Node Count"
+          },
+          "conflict_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Conflict Count"
+          },
+          "target_compression_ratio": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Target Compression Ratio"
+          },
+          "compression_ratio": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Compression Ratio"
+          },
+          "node_reduction_ratio": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Node Reduction Ratio",
+            "default": 0.0
+          },
+          "evidence_coverage_ratio": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Evidence Coverage Ratio",
+            "default": 0.0
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "original_char_count",
+          "retained_char_count",
+          "original_node_count",
+          "integrated_node_count",
+          "merged_node_count",
+          "kept_node_count",
+          "removed_node_count",
+          "refined_node_count",
+          "conflict_count",
+          "target_compression_ratio",
+          "compression_ratio"
+        ],
+        "title": "CompressionStats"
+      },
       "ConceptCluster": {
         "properties": {
           "id": {
@@ -2508,6 +2733,313 @@
         ],
         "title": "HealthResponse"
       },
+      "IntegratedConcept": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "canonical_name": {
+            "type": "string",
+            "title": "Canonical Name"
+          },
+          "member_node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Member Node Ids"
+          },
+          "decision_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Decision Ids"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "source_locators": {
+            "items": {
+              "$ref": "#/components/schemas/SourceLocator"
+            },
+            "type": "array",
+            "title": "Source Locators"
+          },
+          "evidence_chunk_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Chunk Ids"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "default": 0.0
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "canonical_name",
+          "definition"
+        ],
+        "title": "IntegratedConcept"
+      },
+      "IntegrationAction": {
+        "type": "string",
+        "enum": [
+          "merge",
+          "keep",
+          "remove",
+          "refine",
+          "conflict"
+        ],
+        "title": "IntegrationAction"
+      },
+      "IntegrationBuildRequest": {
+        "properties": {
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "force_rebuild": {
+            "type": "boolean",
+            "title": "Force Rebuild",
+            "default": false
+          },
+          "target_compression_ratio": {
+            "type": "number",
+            "maximum": 0.8,
+            "exclusiveMinimum": 0.0,
+            "title": "Target Compression Ratio",
+            "default": 0.3
+          },
+          "alignment_min_confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Alignment Min Confidence",
+            "default": 0.62
+          },
+          "include_keep_decisions": {
+            "type": "boolean",
+            "title": "Include Keep Decisions",
+            "default": true
+          },
+          "max_nodes": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 2.0,
+            "title": "Max Nodes",
+            "default": 1000
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "IntegrationBuildRequest"
+      },
+      "IntegrationBuildResponse": {
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/JobRecord"
+          },
+          "integration_output_path": {
+            "type": "string",
+            "title": "Integration Output Path"
+          },
+          "integration": {
+            "$ref": "#/components/schemas/IntegrationResponse"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "job",
+          "integration_output_path",
+          "integration"
+        ],
+        "title": "IntegrationBuildResponse"
+      },
+      "IntegrationDecision": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "cluster_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cluster Id"
+          },
+          "action": {
+            "$ref": "#/components/schemas/IntegrationAction"
+          },
+          "target_node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Target Node Ids"
+          },
+          "retained_content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retained Content"
+          },
+          "removed_redundancy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Removed Redundancy"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "default": 0.0
+          },
+          "evidence_chunk_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Chunk Ids"
+          },
+          "source_locators": {
+            "items": {
+              "$ref": "#/components/schemas/SourceLocator"
+            },
+            "type": "array",
+            "title": "Source Locators"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "action",
+          "reason"
+        ],
+        "title": "IntegrationDecision"
+      },
+      "IntegrationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "alignment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alignment Id"
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/IntegrationDecision"
+            },
+            "type": "array",
+            "title": "Decisions"
+          },
+          "integrated_concepts": {
+            "items": {
+              "$ref": "#/components/schemas/IntegratedConcept"
+            },
+            "type": "array",
+            "title": "Integrated Concepts"
+          },
+          "compression_stats": {
+            "$ref": "#/components/schemas/CompressionStats"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "compression_stats"
+        ],
+        "title": "IntegrationResponse"
+      },
       "JobRecord": {
         "properties": {
           "id": {
@@ -2637,6 +3169,7 @@
           "graph_build",
           "layered_kg_build",
           "alignment_build",
+          "integration_build",
           "rag_index",
           "converted_textbook_import"
         ],

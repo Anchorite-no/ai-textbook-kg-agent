@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.api.routes import alignment, graph, health, jobs, kg, rag, textbooks, uploads
+from app.api.routes import alignment, graph, health, integration, jobs, kg, rag, textbooks, uploads
 from app.core.config import settings
 from app.models.schemas import ApiErrorResponse
 
@@ -37,6 +37,7 @@ def create_app() -> FastAPI:
     app.include_router(graph.router, prefix=settings.api_prefix)
     app.include_router(kg.router, prefix=settings.api_prefix)
     app.include_router(alignment.router, prefix=settings.api_prefix)
+    app.include_router(integration.router, prefix=settings.api_prefix)
     app.include_router(rag.router, prefix=settings.api_prefix)
     app.include_router(jobs.router, prefix=settings.api_prefix)
     return app

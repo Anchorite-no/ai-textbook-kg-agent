@@ -112,6 +112,8 @@ backend\.venv\Scripts\python.exe backend\scripts\smoke_phase3.py
 backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage6_layered_kg.py
 backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage7_alignment.py
 backend\.venv\Scripts\python.exe backend\scripts\benchmark_00_stage7_alignment.py
+backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage8_integration.py
+backend\.venv\Scripts\python.exe backend\scripts\benchmark_00_stage8_integration.py
 ```
 
 导出前后端契约快照：
@@ -183,6 +185,26 @@ Invoke-RestMethod "http://127.0.0.1:8010/api/alignment?raw_file_ids=raw_a,raw_b"
 
 阶段 7 只输出 `ConceptCluster`、`CanonicalConcept`、`AliasRecord` 和对齐候选，不做 merge/remove 压缩决策。
 
+构建跨教材整合与压缩决策：
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/integration/build -Body (@{
+  raw_file_ids = @("raw_a", "raw_b")
+  force_rebuild = $false
+  target_compression_ratio = 0.30
+  alignment_min_confidence = 0.62
+  include_keep_decisions = $true
+} | ConvertTo-Json) -ContentType "application/json"
+```
+
+读取整合结果：
+
+```powershell
+Invoke-RestMethod "http://127.0.0.1:8010/api/integration?raw_file_ids=raw_a,raw_b"
+```
+
+阶段 8 输出 `merge/keep/remove/refine/conflict` 决策、`IntegratedConcept` 和 `CompressionStats`。`remove` 只表示从整合正文移出，不删除原始 KG 和证据。
+
 建立 RAG 证据索引：
 
 ```powershell
@@ -216,6 +238,12 @@ data\indexes\stage4_rag_benchmark_latest.json
 data\alignments\stage7_alignment_benchmark_latest.json
 ```
 
+阶段 8 benchmark 结果会写入：
+
+```text
+data\integrations\stage8_integration_benchmark_latest.json
+```
+
 ## 前端启动
 
 ```powershell
@@ -243,3 +271,4 @@ npm run dev
 - `/api/graph/build` 单本教材知识点和关系抽取。
 - `/api/kg/layers/build` 多层 KG 基础构建。
 - `/api/alignment/build` 跨教材术语对齐候选和 ConceptCluster。
+- `/api/integration/build` 跨教材整合与压缩决策。
