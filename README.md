@@ -33,6 +33,26 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/textbooks/upload -
 }
 ```
 
+异步上传解析：
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/textbooks/upload-async -Form @{
+  file = Get-Item .\sample.md
+}
+```
+
+返回 `job.id` 后轮询：
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8010/api/jobs/{job_id}
+```
+
+失败任务可重试：
+
+```powershell
+Invoke-RestMethod -Method Post http://127.0.0.1:8010/api/jobs/{job_id}/retry
+```
+
 批量上传解析文件：
 
 ```powershell
@@ -61,6 +81,11 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/uploads/sessions -
 ```
 
 之后按 `PUT /api/uploads/sessions/{session_id}/chunks/{chunk_index}` 上传分片，最后调用 `POST /api/uploads/sessions/{session_id}/complete` 合并并解析。
+如果不希望 complete 请求阻塞，调用：
+
+```powershell
+Invoke-RestMethod -Method Post http://127.0.0.1:8010/api/uploads/sessions/{session_id}/complete-async
+```
 
 查看已解析教材：
 
@@ -80,6 +105,7 @@ Invoke-RestMethod -Method Post http://127.0.0.1:8010/api/textbooks/{raw_file_id}
 cd D:\Hackathon
 $env:PYTHONPATH=(Resolve-Path backend).Path
 backend\.venv\Scripts\python.exe backend\scripts\smoke_phase2.py
+backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage3_async.py
 ```
 
 导出前后端契约快照：

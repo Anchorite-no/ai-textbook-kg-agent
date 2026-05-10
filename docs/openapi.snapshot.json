@@ -237,6 +237,66 @@
         }
       }
     },
+    "/api/textbooks/upload-async": {
+      "post": {
+        "tags": [
+          "textbooks"
+        ],
+        "summary": "Upload Textbook Async",
+        "operationId": "upload_textbook_async_api_textbooks_upload_async_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_textbook_async_api_textbooks_upload_async_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AsyncTextbookParseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/textbooks/{raw_file_id}/parse": {
       "post": {
         "tags": [
@@ -262,6 +322,68 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TextbookUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/textbooks/{raw_file_id}/parse-async": {
+      "post": {
+        "tags": [
+          "textbooks"
+        ],
+        "summary": "Parse Textbook Async",
+        "operationId": "parse_textbook_async_api_textbooks__raw_file_id__parse_async_post",
+        "parameters": [
+          {
+            "name": "raw_file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Raw File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AsyncTextbookParseResponse"
                 }
               }
             }
@@ -627,6 +749,68 @@
         }
       }
     },
+    "/api/uploads/sessions/{session_id}/complete-async": {
+      "post": {
+        "tags": [
+          "uploads"
+        ],
+        "summary": "Complete Upload Session Async",
+        "operationId": "complete_upload_session_async_api_uploads_sessions__session_id__complete_async_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AsyncTextbookParseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
     "/api/graph/build": {
       "post": {
         "tags": [
@@ -903,6 +1087,68 @@
           }
         }
       }
+    },
+    "/api/jobs/{job_id}/retry": {
+      "post": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Retry Job",
+        "operationId": "retry_job_api_jobs__job_id__retry_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRetryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -936,6 +1182,35 @@
           "code"
         ],
         "title": "ApiErrorResponse"
+      },
+      "AsyncTextbookParseResponse": {
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/JobRecord"
+          },
+          "accepted": {
+            "type": "boolean",
+            "title": "Accepted",
+            "default": true
+          },
+          "upload_session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upload Session Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "job"
+        ],
+        "title": "AsyncTextbookParseResponse"
       },
       "Body_upload_chunk_api_uploads_sessions__session_id__chunks__chunk_index__put": {
         "properties": {
@@ -994,6 +1269,35 @@
         },
         "type": "object",
         "title": "Body_upload_textbook_api_textbooks_upload_post"
+      },
+      "Body_upload_textbook_async_api_textbooks_upload_async_post": {
+        "properties": {
+          "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File"
+          },
+          "textbook_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Textbook Title"
+          }
+        },
+        "type": "object",
+        "title": "Body_upload_textbook_async_api_textbooks_upload_async_post"
       },
       "Body_upload_textbooks_batch_api_textbooks_upload_batch_post": {
         "properties": {
@@ -1399,6 +1703,29 @@
               }
             ],
             "title": "Error"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/PipelineStepRecord"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "retryable": {
+            "type": "boolean",
+            "title": "Retryable",
+            "default": false
+          },
+          "context_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context Path"
           }
         },
         "additionalProperties": false,
@@ -1409,6 +1736,24 @@
           "status"
         ],
         "title": "JobRecord"
+      },
+      "JobRetryResponse": {
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/JobRecord"
+          },
+          "accepted": {
+            "type": "boolean",
+            "title": "Accepted",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "job"
+        ],
+        "title": "JobRetryResponse"
       },
       "JobStatus": {
         "type": "string",
@@ -1426,6 +1771,7 @@
           "textbook_upload",
           "textbook_batch_upload",
           "textbook_parse",
+          "textbook_pipeline",
           "large_file_upload",
           "graph_build",
           "converted_textbook_import"
@@ -1650,6 +1996,93 @@
           "chunks"
         ],
         "title": "ParsedTextbook"
+      },
+      "PipelineStepName": {
+        "type": "string",
+        "enum": [
+          "assemble_file",
+          "detect_format",
+          "parse_elements",
+          "build_sections",
+          "chunk_sections",
+          "persist_parsed"
+        ],
+        "title": "PipelineStepName"
+      },
+      "PipelineStepRecord": {
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/PipelineStepName"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PipelineStepStatus",
+            "default": "queued"
+          },
+          "progress": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Progress",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "PipelineStepRecord"
+      },
+      "PipelineStepStatus": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "running",
+          "completed",
+          "failed",
+          "skipped"
+        ],
+        "title": "PipelineStepStatus"
       },
       "RawFile": {
         "properties": {

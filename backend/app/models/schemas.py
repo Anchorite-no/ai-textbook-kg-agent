@@ -294,9 +294,37 @@ class JobType(str, Enum):
     textbook_upload = "textbook_upload"
     textbook_batch_upload = "textbook_batch_upload"
     textbook_parse = "textbook_parse"
+    textbook_pipeline = "textbook_pipeline"
     large_file_upload = "large_file_upload"
     graph_build = "graph_build"
     converted_textbook_import = "converted_textbook_import"
+
+
+class PipelineStepStatus(str, Enum):
+    queued = "queued"
+    running = "running"
+    completed = "completed"
+    failed = "failed"
+    skipped = "skipped"
+
+
+class PipelineStepName(str, Enum):
+    assemble_file = "assemble_file"
+    detect_format = "detect_format"
+    parse_elements = "parse_elements"
+    build_sections = "build_sections"
+    chunk_sections = "chunk_sections"
+    persist_parsed = "persist_parsed"
+
+
+class PipelineStepRecord(ContractModel):
+    name: PipelineStepName
+    status: PipelineStepStatus = PipelineStepStatus.queued
+    progress: int = Field(ge=0, le=100, default=0)
+    message: str = ""
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    error: str | None = None
 
 
 class JobRecord(ContractModel):
@@ -309,6 +337,9 @@ class JobRecord(ContractModel):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     result: dict[str, Any] | None = None
     error: str | None = None
+    steps: list[PipelineStepRecord] = Field(default_factory=list)
+    retryable: bool = False
+    context_path: str | None = None
 
 
 class GraphBuildResponse(ContractModel):
@@ -323,6 +354,17 @@ class TextbookUploadResponse(ContractModel):
     raw_file_id: str
     parsed_output_path: str
     parsed_textbook: ParsedTextbook
+
+
+class AsyncTextbookParseResponse(ContractModel):
+    job: JobRecord
+    accepted: bool = True
+    upload_session_id: str | None = None
+
+
+class JobRetryResponse(ContractModel):
+    job: JobRecord
+    accepted: bool = True
 
 
 class TextbookUploadError(ContractModel):

@@ -4,13 +4,14 @@ import hashlib
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile
 
 from app.core.config import settings
 from app.models.schemas import (
     JobStatus,
     JobType,
     ParsedTextbook,
+    AsyncTextbookParseResponse,
     TextbookBatchUploadResponse,
     TextbookListResponse,
     TextbookUploadError,
@@ -19,6 +20,7 @@ from app.models.schemas import (
 from app.services.converted_textbook_importer import import_converted_textbook, stable_id
 from app.services.job_store import job_store
 from app.services.parsed_storage import list_parsed_textbooks, load_parsed_textbook
+from app.services.pipeline_runner import create_textbook_pipeline_job, run_textbook_pipeline
 from app.services.uploaded_file_parser import parse_uploaded_file
 
 
@@ -64,6 +66,29 @@ async def upload_textbooks_batch(
     return await _run_batch_upload(files, textbook_title)
 
 
+@router.post("/upload-async", response_model=AsyncTextbookParseResponse)
+async def upload_textbook_async(
+    background_tasks: BackgroundTasks,
+    file: UploadFile | None = File(default=None),
+    textbook_title: str | None = Form(default=None),
+) -> AsyncTextbookParseResponse:
+    if file is not None:
+        uploaded_path = await _save_uploaded_file(file)
+        response = create_textbook_pipeline_job(
+            source_kind="uploaded",
+            file_path=uploaded_path,
+            original_filename=file.filename,
+            textbook_title=textbook_title,
+        )
+    else:
+        response = create_textbook_pipeline_job(
+            source_kind="converted_textbook",
+            textbook_title=textbook_title,
+        )
+    background_tasks.add_task(run_textbook_pipeline, response.job.id)
+    return response
+
+
 @router.post("/{raw_file_id}/parse", response_model=TextbookUploadResponse)
 def parse_textbook(raw_file_id: str) -> TextbookUploadResponse:
     uploaded_path = _find_uploaded_file(raw_file_id)
@@ -92,6 +117,23 @@ def parse_textbook(raw_file_id: str) -> TextbookUploadResponse:
         raise HTTPException(status_code=400, detail=parse_failed_detail("教材解析失败", job.error)) from exc
 
     return _complete_job(job_id, parsed, output_path, message="上传文件已重新解析为统一 JSON")
+
+
+@router.post("/{raw_file_id}/parse-async", response_model=AsyncTextbookParseResponse)
+def parse_textbook_async(raw_file_id: str, background_tasks: BackgroundTasks) -> AsyncTextbookParseResponse:
+    uploaded_path = _find_uploaded_file(raw_file_id)
+    if uploaded_path is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"message": "找不到可重新解析的上传源文件", "code": "UPLOADED_SOURCE_NOT_FOUND", "detail": raw_file_id},
+        )
+    response = create_textbook_pipeline_job(
+        source_kind="uploaded",
+        file_path=uploaded_path,
+        original_filename=_existing_original_filename(raw_file_id),
+    )
+    background_tasks.add_task(run_textbook_pipeline, response.job.id)
+    return response
 
 
 @router.get("/{raw_file_id}", response_model=ParsedTextbook)

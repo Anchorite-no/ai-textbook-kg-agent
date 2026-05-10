@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
 
 from app.models.schemas import (
+    AsyncTextbookParseResponse,
     JobStatus,
     JobType,
     TextbookUploadResponse,
@@ -13,6 +14,7 @@ from app.models.schemas import (
 )
 from app.services.converted_textbook_importer import stable_id
 from app.services.job_store import job_store
+from app.services.pipeline_runner import create_textbook_pipeline_job, run_textbook_pipeline
 from app.services.upload_session_store import upload_session_store
 from app.services.uploaded_file_parser import parse_uploaded_file
 
@@ -117,6 +119,16 @@ def complete_upload_session(session_id: str) -> UploadSessionCompleteResponse:
         parsed_textbook=parsed,
     )
     return UploadSessionCompleteResponse(session=completed_session, job=job, parsed_upload=parsed_upload)
+
+
+@router.post("/sessions/{session_id}/complete-async", response_model=AsyncTextbookParseResponse)
+def complete_upload_session_async(session_id: str, background_tasks: BackgroundTasks) -> AsyncTextbookParseResponse:
+    session = _load_session(session_id)
+    if session.missing_chunks:
+        raise HTTPException(status_code=400, detail=_upload_error("上传分片不完整", f"missing chunks: {session.missing_chunks}"))
+    response = create_textbook_pipeline_job(source_kind="upload_session", upload_session_id=session.id)
+    background_tasks.add_task(run_textbook_pipeline, response.job.id)
+    return response
 
 
 def _load_session(session_id: str) -> UploadSessionRecord:
