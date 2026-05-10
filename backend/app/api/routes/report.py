@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from fastapi import APIRouter
 
@@ -57,26 +58,48 @@ def generate_report(payload: ReportGenerateRequest) -> ReportGenerateResponse:
     )
 
 
-def _graph_metrics(raw_file_ids: list[str]) -> dict[str, int | float]:
+def _graph_metrics(raw_file_ids: list[str]) -> dict[str, Any]:
     total_nodes = 0
     total_edges = 0
     total_orphans = 0
+    total_context_edges = 0
     ready_count = 0
+    books: list[dict[str, Any]] = []
     for raw_file_id in raw_file_ids:
         graph = load_graph(raw_file_id)
         if graph is None:
             continue
         ready_count += 1
-        total_nodes += len(graph.nodes)
-        total_edges += len(graph.edges)
+        node_count = len(graph.nodes)
+        edge_count = len(graph.edges)
         incident = {edge.source_node_id for edge in graph.edges} | {edge.target_node_id for edge in graph.edges}
-        total_orphans += sum(1 for node in graph.nodes if node.id not in incident)
+        orphan_count = sum(1 for node in graph.nodes if node.id not in incident)
+        context_edges = int(graph.metadata.get("context_edge_count") or 0)
+        total_nodes += node_count
+        total_edges += edge_count
+        total_orphans += orphan_count
+        total_context_edges += context_edges
+        books.append(
+            {
+                "raw_file_id": raw_file_id,
+                "title": graph.title,
+                "section_count": graph.metadata.get("section_count"),
+                "full_section_count": graph.metadata.get("full_section_count"),
+                "node_count": node_count,
+                "edge_count": edge_count,
+                "orphan_count": orphan_count,
+                "orphan_ratio": round(orphan_count / max(node_count, 1), 4),
+                "context_edge_count": context_edges,
+            }
+        )
     return {
         "graph_ready_count": ready_count,
         "node_count": total_nodes,
         "edge_count": total_edges,
         "orphan_count": total_orphans,
         "orphan_ratio": round(total_orphans / max(total_nodes, 1), 4),
+        "context_edge_count": total_context_edges,
+        "books": books,
     }
 
 
@@ -86,7 +109,7 @@ def _build_markdown(
     generated_at: datetime,
     raw_file_ids: list[str],
     summaries: list[object],
-    graph_metrics: dict[str, int | float],
+    graph_metrics: dict[str, Any],
     rag_status: dict[str, object],
     graphrag_status: dict[str, object],
     integration: dict[str, object] | None,
@@ -105,6 +128,7 @@ def _build_markdown(
         f"- 章节数量：{sum(getattr(item, 'section_count', 0) for item in summaries):,}",
         f"- Chunk 数量：{sum(getattr(item, 'chunk_count', 0) for item in summaries):,}",
         f"- KG：{graph_metrics.get('node_count', 0)} 节点 / {graph_metrics.get('edge_count', 0)} 边，孤立节点率 {float(graph_metrics.get('orphan_ratio', 0)) * 100:.1f}%",
+        f"- 上下文弱链接：{graph_metrics.get('context_edge_count', 0)} 条",
         f"- RAG：{rag_status.get('status')}，{rag_status.get('chunk_count', 0)} chunks",
         f"- GraphRAG：{graphrag_status.get('status')}，{graphrag_status.get('node_count', 0)} 节点 / {graphrag_status.get('edge_count', 0)} 边",
         "",
@@ -114,6 +138,27 @@ def _build_markdown(
     lines.extend(
         f"{index}. {getattr(item, 'title', '')}（{getattr(item, 'section_count', 0)} 章节，{getattr(item, 'chunk_count', 0)} chunks）"
         for index, item in enumerate(summaries, start=1)
+    )
+    lines.extend(["", "## 图谱质量", ""])
+    lines.extend(
+        [
+            "| 教材 | Section | 节点 | 边 | 孤立率 | 上下文边 |",
+            "| --- | ---: | ---: | ---: | ---: | ---: |",
+        ]
+    )
+    for book in graph_metrics.get("books", []):
+        if not isinstance(book, dict):
+            continue
+        lines.append(
+            f"| {book.get('title', '')} | {book.get('section_count', 0)} / {book.get('full_section_count', 0)} | "
+            f"{book.get('node_count', 0)} | {book.get('edge_count', 0)} | "
+            f"{float(book.get('orphan_ratio', 0)) * 100:.1f}% | {book.get('context_edge_count', 0)} |"
+        )
+    lines.extend(
+        [
+            "",
+            "说明：上下文弱链接来自同章节、同 chunk、相邻章节关系，用于降低零散节点并辅助教师浏览；此类边在 metadata 中标记为 contextual_edge。",
+        ]
     )
     lines.extend(["", "## 整合压缩", ""])
     if isinstance(stats, dict):
@@ -137,6 +182,13 @@ def _build_markdown(
         lines.append("暂无可展示决策。")
     lines.extend(
         [
+            "",
+            "## 推荐演示问答",
+            "",
+            "- 炎症反应的基本过程是什么？",
+            "- 细胞损伤和细胞死亡有什么关系？",
+            "- 血液循环相关知识在哪些教材中出现？",
+            "- 请比较病理学和病理生理学中对疾病机制的描述差异。",
             "",
             "## 证据链说明",
             "",

@@ -185,11 +185,11 @@ export function KnowledgeGraph({
     nodeSel.append("text")
       .attr("x", (d) => d.radius + 5)
       .attr("y", 4)
-      .attr("font-size", 11)
+      .attr("font-size", 10)
       .attr("fill", "var(--text-default)")
       .attr("pointer-events", "none")
       .attr("user-select", "none")
-      .text((d) => (d.frequency >= 3 ? d.name : ""));
+      .text((d) => d.name);
 
     // title tooltip
     nodeSel.append("title")
@@ -251,7 +251,7 @@ export function KnowledgeGraph({
       nodeSel.select("text").text((n) => {
         const hop = depthMap.get(n.id);
         if (hop !== undefined && hop <= 1) return n.name;
-        return n.frequency >= 3 ? n.name : "";
+        return n.name;
       });
     }
 
@@ -263,7 +263,7 @@ export function KnowledgeGraph({
           .attr("stroke-opacity", 0.45)
           .attr("marker-end", "");
       });
-      nodeSel.select("text").text((n) => (n.frequency >= 3 ? n.name : ""));
+      nodeSel.select("text").text((n) => n.name);
     }
 
     // ---- 悬停高亮（拖拽期间锁定，不受 mouseenter/mouseleave 干扰） ----
