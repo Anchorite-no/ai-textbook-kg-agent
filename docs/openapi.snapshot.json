@@ -627,6 +627,221 @@
         }
       }
     },
+    "/api/graph/build": {
+      "post": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Build Graph",
+        "operationId": "build_graph_api_graph_build_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GraphBuildRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphBuildResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph": {
+      "get": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Get Graph",
+        "operationId": "get_graph_api_graph_get",
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "const": "single",
+              "type": "string",
+              "default": "single",
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "raw_file_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Raw File Id"
+            }
+          },
+          {
+            "name": "top_n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 200,
+              "title": "Top N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/graph/nodes/{node_id}": {
+      "get": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Get Graph Node",
+        "operationId": "get_graph_node_api_graph_nodes__node_id__get",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphNodeDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
     "/api/jobs/{job_id}": {
       "get": {
         "tags": [
@@ -939,6 +1154,165 @@
         ],
         "title": "DocumentElementType"
       },
+      "GraphBuildRequest": {
+        "properties": {
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          },
+          "section_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Section Ids"
+          },
+          "force_rebuild": {
+            "type": "boolean",
+            "title": "Force Rebuild",
+            "default": false
+          },
+          "max_sections": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Max Sections",
+            "default": 20
+          },
+          "max_nodes_per_section": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Max Nodes Per Section",
+            "default": 8
+          },
+          "use_llm": {
+            "type": "boolean",
+            "title": "Use Llm",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "raw_file_id"
+        ],
+        "title": "GraphBuildRequest"
+      },
+      "GraphBuildResponse": {
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/JobRecord"
+          },
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          },
+          "graph_output_path": {
+            "type": "string",
+            "title": "Graph Output Path"
+          },
+          "graph": {
+            "$ref": "#/components/schemas/GraphResponse"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "job",
+          "raw_file_id",
+          "graph_output_path",
+          "graph"
+        ],
+        "title": "GraphBuildResponse"
+      },
+      "GraphNodeDetailResponse": {
+        "properties": {
+          "node": {
+            "$ref": "#/components/schemas/KnowledgeNode"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeEdge"
+            },
+            "type": "array",
+            "title": "Edges"
+          },
+          "evidence_chunks": {
+            "items": {
+              "$ref": "#/components/schemas/Chunk"
+            },
+            "type": "array",
+            "title": "Evidence Chunks"
+          },
+          "graph_id": {
+            "type": "string",
+            "title": "Graph Id"
+          },
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "node",
+          "graph_id",
+          "raw_file_id"
+        ],
+        "title": "GraphNodeDetailResponse"
+      },
+      "GraphResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "raw_file_id": {
+            "type": "string",
+            "title": "Raw File Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeNode"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeEdge"
+            },
+            "type": "array",
+            "title": "Edges"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "raw_file_id",
+          "title",
+          "nodes",
+          "edges"
+        ],
+        "title": "GraphResponse"
+      },
       "HealthResponse": {
         "properties": {
           "status": {
@@ -1053,9 +1427,177 @@
           "textbook_batch_upload",
           "textbook_parse",
           "large_file_upload",
+          "graph_build",
           "converted_textbook_import"
         ],
         "title": "JobType"
+      },
+      "KnowledgeEdge": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "source_node_id": {
+            "type": "string",
+            "title": "Source Node Id"
+          },
+          "target_node_id": {
+            "type": "string",
+            "title": "Target Node Id"
+          },
+          "relation_type": {
+            "$ref": "#/components/schemas/KnowledgeRelationType"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "source_locator": {
+            "$ref": "#/components/schemas/SourceLocator"
+          },
+          "evidence_chunk_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Chunk Ids"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "default": 0.0
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "source_node_id",
+          "target_node_id",
+          "relation_type",
+          "source_locator"
+        ],
+        "title": "KnowledgeEdge"
+      },
+      "KnowledgeNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "node_type": {
+            "$ref": "#/components/schemas/KnowledgeNodeType"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Aliases"
+          },
+          "source_locator": {
+            "$ref": "#/components/schemas/SourceLocator"
+          },
+          "evidence_chunk_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Chunk Ids"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "default": 0.0
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "node_type",
+          "source_locator"
+        ],
+        "title": "KnowledgeNode"
+      },
+      "KnowledgeNodeType": {
+        "type": "string",
+        "enum": [
+          "Concept",
+          "Term",
+          "Mechanism",
+          "Process",
+          "Structure",
+          "Function",
+          "Disease",
+          "Symptom",
+          "Pathogen",
+          "Diagnosis",
+          "Treatment",
+          "Experiment",
+          "Example"
+        ],
+        "title": "KnowledgeNodeType"
+      },
+      "KnowledgeRelationType": {
+        "type": "string",
+        "enum": [
+          "ALIAS_OF",
+          "SAME_AS",
+          "IS_A",
+          "PART_OF",
+          "CONTAINS",
+          "PARALLEL_WITH",
+          "PREREQUISITE_OF",
+          "CAUSES",
+          "LEADS_TO",
+          "APPLIES_TO",
+          "CONTRASTS_WITH",
+          "EXPLAINS",
+          "EVIDENCED_BY",
+          "MENTIONED_IN",
+          "REFINES",
+          "CONFLICTS_WITH"
+        ],
+        "title": "KnowledgeRelationType"
       },
       "ParsedTextbook": {
         "properties": {

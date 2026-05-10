@@ -92,6 +92,27 @@ backend\.venv\Scripts\python.exe backend\scripts\export_openapi.py
 
 快照输出到 `docs\openapi.snapshot.json`。前端离线 codegen 使用该文件；live codegen 使用 `http://127.0.0.1:8010/openapi.json`。
 
+构建单本教材知识图谱：
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/graph/build -Body (@{
+  raw_file_id = "raw_xxx"
+  force_rebuild = $false
+  max_sections = 20
+  max_nodes_per_section = 8
+  use_llm = $true
+} | ConvertTo-Json) -ContentType "application/json"
+```
+
+读取图谱和节点详情：
+
+```powershell
+Invoke-RestMethod "http://127.0.0.1:8010/api/graph?raw_file_id=raw_xxx&top_n=200"
+Invoke-RestMethod "http://127.0.0.1:8010/api/graph/nodes/{node_id}"
+```
+
+未配置 LLM 时，后端会使用确定性兜底抽取，便于 demo 和测试继续推进。
+
 ## 前端启动
 
 ```powershell

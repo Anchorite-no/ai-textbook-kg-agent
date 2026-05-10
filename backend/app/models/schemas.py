@@ -139,6 +139,8 @@ class KnowledgeRelationType(str, Enum):
     same_as = "SAME_AS"
     is_a = "IS_A"
     part_of = "PART_OF"
+    contains = "CONTAINS"
+    parallel_with = "PARALLEL_WITH"
     prerequisite_of = "PREREQUISITE_OF"
     causes = "CAUSES"
     leads_to = "LEADS_TO"
@@ -161,6 +163,33 @@ class KnowledgeEdge(ContractModel):
     evidence_chunk_ids: list[str] = Field(default_factory=list)
     confidence: float = Field(ge=0, le=1, default=0.0)
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphResponse(ContractModel):
+    id: str
+    raw_file_id: str
+    title: str
+    nodes: list[KnowledgeNode]
+    edges: list[KnowledgeEdge]
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphBuildRequest(ContractModel):
+    raw_file_id: str
+    section_ids: list[str] = Field(default_factory=list)
+    force_rebuild: bool = False
+    max_sections: int = Field(default=20, ge=1, le=200)
+    max_nodes_per_section: int = Field(default=8, ge=1, le=30)
+    use_llm: bool = True
+
+
+class GraphNodeDetailResponse(ContractModel):
+    node: KnowledgeNode
+    edges: list[KnowledgeEdge] = Field(default_factory=list)
+    evidence_chunks: list[Chunk] = Field(default_factory=list)
+    graph_id: str
+    raw_file_id: str
 
 
 class ConceptCluster(ContractModel):
@@ -266,6 +295,7 @@ class JobType(str, Enum):
     textbook_batch_upload = "textbook_batch_upload"
     textbook_parse = "textbook_parse"
     large_file_upload = "large_file_upload"
+    graph_build = "graph_build"
     converted_textbook_import = "converted_textbook_import"
 
 
@@ -279,6 +309,13 @@ class JobRecord(ContractModel):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     result: dict[str, Any] | None = None
     error: str | None = None
+
+
+class GraphBuildResponse(ContractModel):
+    job: JobRecord
+    raw_file_id: str
+    graph_output_path: str
+    graph: GraphResponse
 
 
 class TextbookUploadResponse(ContractModel):
