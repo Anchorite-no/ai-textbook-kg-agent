@@ -11,6 +11,7 @@ __pycache__/
 backend/.venv/
 
 node_modules/
+frontend/
 frontend/dist/
 frontend/.vite/
 
