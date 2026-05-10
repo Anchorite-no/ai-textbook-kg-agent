@@ -84,9 +84,11 @@ KG 抽取 prompt 采用 schema-first 约束：
 - 教材：7 本。
 - 页数：2,567。
 - chunks：5,782。
-- KG nodes：5,619。
-- KG edges：3,862。
-- alignment clusters：44。
+- KG nodes：16,585。
+- KG edges：45,800。
+- 上下文弱链接：28,395。
+- 孤立节点率：3.64%。
+- alignment clusters：48。
 - integration decisions：3,935。
 - compression ratio：7.45%。
 

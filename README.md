@@ -32,6 +32,7 @@ RawFile -> DocumentElement -> Section -> Chunk -> KnowledgeNode / KnowledgeEdge 
 - `docs/测试与运行报告.md`
 - `docs/演示说明.md`
 - `docs/后端接口对接清单.md`
+- `report/整合报告.md`
 
 ## 后端启动
 
