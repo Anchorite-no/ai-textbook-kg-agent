@@ -1140,6 +1140,8 @@ export interface components {
             node: components["schemas"]["KnowledgeNode"];
             /** Edges */
             edges?: components["schemas"]["KnowledgeEdge"][];
+            /** Related Nodes */
+            related_nodes?: components["schemas"]["KnowledgeNode"][];
             /** Evidence Chunks */
             evidence_chunks?: components["schemas"]["Chunk"][];
             /** Graph Id */

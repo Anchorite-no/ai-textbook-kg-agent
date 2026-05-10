@@ -3727,6 +3727,13 @@
             "type": "array",
             "title": "Edges"
           },
+          "related_nodes": {
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeNode"
+            },
+            "type": "array",
+            "title": "Related Nodes"
+          },
           "evidence_chunks": {
             "items": {
               "$ref": "#/components/schemas/Chunk"

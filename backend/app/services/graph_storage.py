@@ -44,10 +44,12 @@ def find_node_detail(node_id: str) -> GraphNodeDetailResponse | None:
         if node is None:
             continue
         edges = _edges_for_node(graph.edges, node_id)
+        related_nodes = _related_nodes(graph.nodes, edges, node_id)
         evidence_chunks = _evidence_chunks(graph.raw_file_id, node.evidence_chunk_ids)
         return GraphNodeDetailResponse(
             node=node,
             edges=edges,
+            related_nodes=related_nodes,
             evidence_chunks=evidence_chunks,
             graph_id=graph.id,
             raw_file_id=graph.raw_file_id,
@@ -57,6 +59,15 @@ def find_node_detail(node_id: str) -> GraphNodeDetailResponse | None:
 
 def _edges_for_node(edges: list[KnowledgeEdge], node_id: str) -> list[KnowledgeEdge]:
     return [edge for edge in edges if edge.source_node_id == node_id or edge.target_node_id == node_id]
+
+
+def _related_nodes(nodes: list[KnowledgeNode], edges: list[KnowledgeEdge], node_id: str) -> list[KnowledgeNode]:
+    related_ids = {
+        edge.target_node_id if edge.source_node_id == node_id else edge.source_node_id
+        for edge in edges
+    }
+    node_by_id = {node.id: node for node in nodes}
+    return [node_by_id[related_id] for related_id in related_ids if related_id in node_by_id]
 
 
 def _evidence_chunks(raw_file_id: str, chunk_ids: list[str]) -> list[Chunk]:

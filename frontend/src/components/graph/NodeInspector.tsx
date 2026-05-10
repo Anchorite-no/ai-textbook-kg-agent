@@ -94,11 +94,9 @@ export function NodeInspector({ nodeId, onClose }: NodeInspectorProps) {
               <BookOpen className="size-3.5 text-text-muted mt-0.5 shrink-0" aria-hidden />
               <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                 <span className="text-meta text-text-default truncate">
-                  {node.source_locator.raw_file_id}
-                </span>
-                <span className="text-[11px] text-text-muted truncate">
                   {node.source_locator.locator_text}
                 </span>
+                <span className="text-[11px] text-text-muted truncate">原文证据定位</span>
               </div>
               <Tooltip content="复制来源定位">
                 <IconButton
@@ -118,14 +116,9 @@ export function NodeInspector({ nodeId, onClose }: NodeInspectorProps) {
 
         {node?.evidence_chunk_ids?.length ? (
           <Section title="证据 chunk">
-            <ul className="flex flex-col gap-1 text-meta text-text-muted font-mono">
-              {node.evidence_chunk_ids.slice(0, 6).map((chunkId: string) => (
-                <li key={chunkId} className="truncate">{chunkId}</li>
-              ))}
-              {node.evidence_chunk_ids.length > 6 ? (
-                <li className="text-text-subtle">…还有 {node.evidence_chunk_ids.length - 6} 条</li>
-              ) : null}
-            </ul>
+            <p className="text-meta text-text-muted">
+              已关联 {node.evidence_chunk_ids.length} 条原文证据，可在知识卡片中展开查看。
+            </p>
           </Section>
         ) : null}
       </div>

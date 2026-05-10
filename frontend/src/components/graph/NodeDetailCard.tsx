@@ -133,8 +133,10 @@ export function NodeDetailCard({ nodeId, onClose }: NodeDetailCardProps) {
   const nodeNameMap = useMemo(() => {
     const map = new Map<string, string>();
     graphData?.nodes?.forEach((n) => map.set(n.id, n.name));
+    data?.related_nodes?.forEach((n) => map.set(n.id, n.name));
+    if (data?.node) map.set(data.node.id, data.node.name);
     return map;
-  }, [graphData?.nodes]);
+  }, [data?.node, data?.related_nodes, graphData?.nodes]);
 
   const node = data?.node ?? null;
   const edges = data?.edges ?? [];
@@ -147,7 +149,7 @@ export function NodeDetailCard({ nodeId, onClose }: NodeDetailCardProps) {
     for (const edge of edges) {
       const outgoing = edge.source_node_id === nodeId;
       const otherId = outgoing ? edge.target_node_id : edge.source_node_id;
-      const otherName = nodeNameMap.get(otherId) ?? otherId;
+      const otherName = nodeNameMap.get(otherId) ?? "相关知识点";
       const group = classifyRelation(edge.relation_type, outgoing);
       groups.get(group)!.push({
         otherId,
@@ -315,7 +317,7 @@ export function NodeDetailCard({ nodeId, onClose }: NodeDetailCardProps) {
         <div className="px-4 pb-3">
           <div className="flex items-center gap-2 p-2 rounded-control bg-surface-input text-[11px] text-text-muted">
             <BookOpen className="size-3.5 shrink-0" aria-hidden />
-            <span className="truncate">{node.source_locator.raw_file_id}</span>
+            <span className="truncate">{node.source_locator.locator_text}</span>
             <span className="ml-auto tabular shrink-0">
               置信度 {(node.confidence * 100).toFixed(0)}%
             </span>

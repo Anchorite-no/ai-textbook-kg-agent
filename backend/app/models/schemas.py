@@ -187,6 +187,7 @@ class GraphBuildRequest(ContractModel):
 class GraphNodeDetailResponse(ContractModel):
     node: KnowledgeNode
     edges: list[KnowledgeEdge] = Field(default_factory=list)
+    related_nodes: list[KnowledgeNode] = Field(default_factory=list)
     evidence_chunks: list[Chunk] = Field(default_factory=list)
     graph_id: str
     raw_file_id: str
