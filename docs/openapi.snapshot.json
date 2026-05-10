@@ -1156,6 +1156,136 @@
         }
       }
     },
+    "/api/alignment/build": {
+      "post": {
+        "tags": [
+          "alignment"
+        ],
+        "summary": "Build Alignment Graph",
+        "operationId": "build_alignment_graph_api_alignment_build_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlignmentBuildRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlignmentBuildResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alignment": {
+      "get": {
+        "tags": [
+          "alignment"
+        ],
+        "summary": "Get Alignment",
+        "operationId": "get_alignment_api_alignment_get",
+        "parameters": [
+          {
+            "name": "raw_file_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Raw File Ids"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlignmentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
     "/api/rag/index": {
       "post": {
         "tags": [
@@ -1456,6 +1586,306 @@
   },
   "components": {
     "schemas": {
+      "AliasRecord": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "alias": {
+            "type": "string",
+            "title": "Alias"
+          },
+          "canonical_name": {
+            "type": "string",
+            "title": "Canonical Name"
+          },
+          "node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Node Ids"
+          },
+          "relation_type": {
+            "$ref": "#/components/schemas/AlignmentRelationType",
+            "default": "ALIAS_OF"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence"
+          },
+          "evidence_chunk_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Chunk Ids"
+          },
+          "source_locators": {
+            "items": {
+              "$ref": "#/components/schemas/SourceLocator"
+            },
+            "type": "array",
+            "title": "Source Locators"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "alias",
+          "canonical_name",
+          "confidence"
+        ],
+        "title": "AliasRecord"
+      },
+      "AlignmentBuildRequest": {
+        "properties": {
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "force_rebuild": {
+            "type": "boolean",
+            "title": "Force Rebuild",
+            "default": false
+          },
+          "min_confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Confidence",
+            "default": 0.62
+          },
+          "include_singletons": {
+            "type": "boolean",
+            "title": "Include Singletons",
+            "default": false
+          },
+          "max_nodes": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 2.0,
+            "title": "Max Nodes",
+            "default": 1000
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "AlignmentBuildRequest"
+      },
+      "AlignmentBuildResponse": {
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/JobRecord"
+          },
+          "alignment_output_path": {
+            "type": "string",
+            "title": "Alignment Output Path"
+          },
+          "alignment": {
+            "$ref": "#/components/schemas/AlignmentResponse"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "job",
+          "alignment_output_path",
+          "alignment"
+        ],
+        "title": "AlignmentBuildResponse"
+      },
+      "AlignmentCandidate": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "source_node_id": {
+            "type": "string",
+            "title": "Source Node Id"
+          },
+          "target_node_id": {
+            "type": "string",
+            "title": "Target Node Id"
+          },
+          "relation_type": {
+            "$ref": "#/components/schemas/AlignmentRelationType"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence"
+          },
+          "signals": {
+            "items": {
+              "$ref": "#/components/schemas/AlignmentSignal"
+            },
+            "type": "array",
+            "title": "Signals"
+          },
+          "evidence_chunk_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Chunk Ids"
+          },
+          "source_locators": {
+            "items": {
+              "$ref": "#/components/schemas/SourceLocator"
+            },
+            "type": "array",
+            "title": "Source Locators"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "needs_teacher_review": {
+            "type": "boolean",
+            "title": "Needs Teacher Review",
+            "default": false
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "source_node_id",
+          "target_node_id",
+          "relation_type",
+          "confidence",
+          "reason"
+        ],
+        "title": "AlignmentCandidate"
+      },
+      "AlignmentRelationType": {
+        "type": "string",
+        "enum": [
+          "SAME_AS",
+          "ALIAS_OF",
+          "REFINES",
+          "CONFLICTS_WITH"
+        ],
+        "title": "AlignmentRelationType"
+      },
+      "AlignmentResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "canonical_concepts": {
+            "items": {
+              "$ref": "#/components/schemas/CanonicalConcept"
+            },
+            "type": "array",
+            "title": "Canonical Concepts"
+          },
+          "aliases": {
+            "items": {
+              "$ref": "#/components/schemas/AliasRecord"
+            },
+            "type": "array",
+            "title": "Aliases"
+          },
+          "clusters": {
+            "items": {
+              "$ref": "#/components/schemas/ConceptCluster"
+            },
+            "type": "array",
+            "title": "Clusters"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/AlignmentCandidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "AlignmentResponse"
+      },
+      "AlignmentSignal": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Score"
+          },
+          "weight": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Weight"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "score",
+          "weight"
+        ],
+        "title": "AlignmentSignal"
+      },
       "ApiErrorResponse": {
         "properties": {
           "message": {
@@ -1630,6 +2060,81 @@
         ],
         "title": "Body_upload_textbooks_batch_api_textbooks_upload_batch_post"
       },
+      "CanonicalConcept": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "canonical_name": {
+            "type": "string",
+            "title": "Canonical Name"
+          },
+          "cluster_id": {
+            "type": "string",
+            "title": "Cluster Id"
+          },
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Aliases"
+          },
+          "member_node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Member Node Ids"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "source_locators": {
+            "items": {
+              "$ref": "#/components/schemas/SourceLocator"
+            },
+            "type": "array",
+            "title": "Source Locators"
+          },
+          "evidence_chunk_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Chunk Ids"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "canonical_name",
+          "cluster_id",
+          "confidence"
+        ],
+        "title": "CanonicalConcept"
+      },
       "Chunk": {
         "properties": {
           "id": {
@@ -1687,6 +2192,59 @@
           "source_locator"
         ],
         "title": "Chunk"
+      },
+      "ConceptCluster": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "canonical_name": {
+            "type": "string",
+            "title": "Canonical Name"
+          },
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Aliases"
+          },
+          "member_node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Member Node Ids"
+          },
+          "evidence_chunk_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Chunk Ids"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "default": 0.0
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "canonical_name",
+          "member_node_ids"
+        ],
+        "title": "ConceptCluster"
       },
       "DocumentElement": {
         "properties": {
@@ -2078,6 +2636,7 @@
           "large_file_upload",
           "graph_build",
           "layered_kg_build",
+          "alignment_build",
           "rag_index",
           "converted_textbook_import"
         ],

@@ -110,6 +110,8 @@ backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage4_rag.py
 backend\.venv\Scripts\python.exe backend\scripts\benchmark_00_stage4_rag.py
 backend\.venv\Scripts\python.exe backend\scripts\smoke_phase3.py
 backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage6_layered_kg.py
+backend\.venv\Scripts\python.exe backend\scripts\smoke_00_stage7_alignment.py
+backend\.venv\Scripts\python.exe backend\scripts\benchmark_00_stage7_alignment.py
 ```
 
 导出前后端契约快照：
@@ -162,6 +164,25 @@ Invoke-RestMethod "http://127.0.0.1:8010/api/kg/layers?raw_file_id=raw_xxx"
 
 当前阶段 6 只生成 `document_tree`、`concept_kg`、`evidence_graph`，其余层保持 reserved，等待后续阶段。
 
+构建跨教材术语对齐：
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/alignment/build -Body (@{
+  raw_file_ids = @("raw_a", "raw_b")
+  force_rebuild = $false
+  min_confidence = 0.62
+  include_singletons = $false
+} | ConvertTo-Json) -ContentType "application/json"
+```
+
+读取术语对齐：
+
+```powershell
+Invoke-RestMethod "http://127.0.0.1:8010/api/alignment?raw_file_ids=raw_a,raw_b"
+```
+
+阶段 7 只输出 `ConceptCluster`、`CanonicalConcept`、`AliasRecord` 和对齐候选，不做 merge/remove 压缩决策。
+
 建立 RAG 证据索引：
 
 ```powershell
@@ -189,6 +210,12 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/rag/query -Body (@
 data\indexes\stage4_rag_benchmark_latest.json
 ```
 
+阶段 7 benchmark 结果会写入：
+
+```text
+data\alignments\stage7_alignment_benchmark_latest.json
+```
+
 ## 前端启动
 
 ```powershell
@@ -212,6 +239,7 @@ npm run dev
 - 上传常见教学资料并输出统一 JSON 到 `data/parsed`。
 - `/api/textbooks/upload-batch` 批量上传，单文件失败不会阻断其它文件。
 - `/api/textbooks/{raw_file_id}/parse` 对已保存上传文件重新解析。
-- `/api/rag/index`、`/api/rag/query` 本地 BM25 证据索引。
+- `/api/rag/index`、`/api/rag/query` 本地混合证据索引。
 - `/api/graph/build` 单本教材知识点和关系抽取。
 - `/api/kg/layers/build` 多层 KG 基础构建。
+- `/api/alignment/build` 跨教材术语对齐候选和 ConceptCluster。

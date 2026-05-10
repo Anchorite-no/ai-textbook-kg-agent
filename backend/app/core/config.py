@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     index_data_dir: Path = PROJECT_ROOT / "data" / "indexes"
     graph_data_dir: Path = PROJECT_ROOT / "data" / "graphs"
     layered_graph_data_dir: Path = PROJECT_ROOT / "data" / "graphs" / "layers"
+    alignment_data_dir: Path = PROJECT_ROOT / "data" / "alignments"
     llm_cache_dir: Path = PROJECT_ROOT / "data" / "graphs" / "llm_cache"
     llm_provider: str = "none"
     openai_api_key: str | None = None
@@ -42,6 +43,7 @@ class Settings(BaseSettings):
         self.index_data_dir = self._resolve_path(self.index_data_dir)
         self.graph_data_dir = self._resolve_path(self.graph_data_dir)
         self.layered_graph_data_dir = self._resolve_path(self.layered_graph_data_dir)
+        self.alignment_data_dir = self._resolve_path(self.alignment_data_dir)
         self.llm_cache_dir = self._resolve_path(self.llm_cache_dir)
         return self
 

@@ -272,6 +272,78 @@ class ConceptCluster(ContractModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class AlignmentRelationType(str, Enum):
+    same_as = "SAME_AS"
+    alias_of = "ALIAS_OF"
+    refines = "REFINES"
+    conflicts_with = "CONFLICTS_WITH"
+
+
+class AlignmentSignal(ContractModel):
+    name: str
+    score: float = Field(ge=0, le=1)
+    weight: float = Field(ge=0, le=1)
+    detail: str | None = None
+
+
+class AlignmentCandidate(ContractModel):
+    id: str
+    source_node_id: str
+    target_node_id: str
+    relation_type: AlignmentRelationType
+    confidence: float = Field(ge=0, le=1)
+    signals: list[AlignmentSignal] = Field(default_factory=list)
+    evidence_chunk_ids: list[str] = Field(default_factory=list)
+    source_locators: list[SourceLocator] = Field(default_factory=list)
+    reason: str
+    needs_teacher_review: bool = False
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class AliasRecord(ContractModel):
+    id: str
+    alias: str
+    canonical_name: str
+    node_ids: list[str] = Field(default_factory=list)
+    relation_type: AlignmentRelationType = AlignmentRelationType.alias_of
+    confidence: float = Field(ge=0, le=1)
+    evidence_chunk_ids: list[str] = Field(default_factory=list)
+    source_locators: list[SourceLocator] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class CanonicalConcept(ContractModel):
+    id: str
+    canonical_name: str
+    cluster_id: str
+    aliases: list[str] = Field(default_factory=list)
+    member_node_ids: list[str] = Field(default_factory=list)
+    definition: str | None = None
+    source_locators: list[SourceLocator] = Field(default_factory=list)
+    evidence_chunk_ids: list[str] = Field(default_factory=list)
+    confidence: float = Field(ge=0, le=1)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class AlignmentBuildRequest(ContractModel):
+    raw_file_ids: list[str] = Field(default_factory=list)
+    force_rebuild: bool = False
+    min_confidence: float = Field(default=0.62, ge=0, le=1)
+    include_singletons: bool = False
+    max_nodes: int = Field(default=1000, ge=2, le=10000)
+
+
+class AlignmentResponse(ContractModel):
+    id: str
+    raw_file_ids: list[str] = Field(default_factory=list)
+    canonical_concepts: list[CanonicalConcept] = Field(default_factory=list)
+    aliases: list[AliasRecord] = Field(default_factory=list)
+    clusters: list[ConceptCluster] = Field(default_factory=list)
+    candidates: list[AlignmentCandidate] = Field(default_factory=list)
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class IntegrationAction(str, Enum):
     merge = "merge"
     keep = "keep"
@@ -409,6 +481,7 @@ class JobType(str, Enum):
     large_file_upload = "large_file_upload"
     graph_build = "graph_build"
     layered_kg_build = "layered_kg_build"
+    alignment_build = "alignment_build"
     rag_index = "rag_index"
     converted_textbook_import = "converted_textbook_import"
 
@@ -467,6 +540,12 @@ class LayeredGraphBuildResponse(ContractModel):
     raw_file_id: str
     layered_graph_output_path: str
     layered_graph: LayeredGraphResponse
+
+
+class AlignmentBuildResponse(ContractModel):
+    job: JobRecord
+    alignment_output_path: str
+    alignment: AlignmentResponse
 
 
 class RagIndexResponse(ContractModel):

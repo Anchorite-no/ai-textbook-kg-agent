@@ -19,11 +19,13 @@ data/uploads/*
 data/parsed/*
 data/indexes/*
 data/graphs/*
+data/alignments/*
 data/jobs/*
 !data/uploads/.gitkeep
 !data/parsed/.gitkeep
 !data/indexes/.gitkeep
 !data/graphs/.gitkeep
+!data/alignments/.gitkeep
 !data/jobs/.gitkeep
 
 *.sqlite
