@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     upload_dir: Path = PROJECT_ROOT / "data" / "uploads"
     upload_sessions_dir: Path = PROJECT_ROOT / "data" / "uploads" / "sessions"
     job_data_dir: Path = PROJECT_ROOT / "data" / "jobs"
+    index_data_dir: Path = PROJECT_ROOT / "data" / "indexes"
     graph_data_dir: Path = PROJECT_ROOT / "data" / "graphs"
     llm_cache_dir: Path = PROJECT_ROOT / "data" / "graphs" / "llm_cache"
     llm_provider: str = "none"
@@ -37,6 +38,7 @@ class Settings(BaseSettings):
         self.upload_dir = self._resolve_path(self.upload_dir)
         self.upload_sessions_dir = self._resolve_path(self.upload_sessions_dir)
         self.job_data_dir = self._resolve_path(self.job_data_dir)
+        self.index_data_dir = self._resolve_path(self.index_data_dir)
         self.graph_data_dir = self._resolve_path(self.graph_data_dir)
         self.llm_cache_dir = self._resolve_path(self.llm_cache_dir)
         return self

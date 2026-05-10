@@ -260,6 +260,46 @@ class RetrievalEvidence(ContractModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class RagIndexRequest(ContractModel):
+    raw_file_ids: list[str] = Field(default_factory=list)
+    force_rebuild: bool = False
+    max_chunks: int | None = Field(default=None, ge=1, le=200000)
+
+
+class RagIndexStatus(ContractModel):
+    status: Literal["empty", "ready"]
+    textbook_count: int = 0
+    chunk_count: int = 0
+    raw_file_ids: list[str] = Field(default_factory=list)
+    index_path: str | None = None
+    updated_at: datetime | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class RagQueryRequest(ContractModel):
+    question: str = Field(min_length=1)
+    top_k: int = Field(default=5, ge=1, le=20)
+    raw_file_ids: list[str] = Field(default_factory=list)
+
+
+class RagCitation(ContractModel):
+    chunk_id: str
+    raw_file_id: str
+    textbook: str
+    chapter: str | None = None
+    source_locator: SourceLocator
+    relevance_score: float = Field(ge=0, le=1)
+    quote: str
+
+
+class RagQueryResponse(ContractModel):
+    question: str
+    answer: str
+    citations: list[RagCitation] = Field(default_factory=list)
+    source_chunks: list[Chunk] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class ParsedTextbook(ContractModel):
     id: str
     raw_file: RawFile
@@ -297,6 +337,7 @@ class JobType(str, Enum):
     textbook_pipeline = "textbook_pipeline"
     large_file_upload = "large_file_upload"
     graph_build = "graph_build"
+    rag_index = "rag_index"
     converted_textbook_import = "converted_textbook_import"
 
 
@@ -347,6 +388,11 @@ class GraphBuildResponse(ContractModel):
     raw_file_id: str
     graph_output_path: str
     graph: GraphResponse
+
+
+class RagIndexResponse(ContractModel):
+    job: JobRecord
+    status: RagIndexStatus
 
 
 class TextbookUploadResponse(ContractModel):

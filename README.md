@@ -139,6 +139,27 @@ Invoke-RestMethod "http://127.0.0.1:8010/api/graph/nodes/{node_id}"
 
 未配置 LLM 时，后端会使用确定性兜底抽取，便于 demo 和测试继续推进。
 
+建立 RAG 证据索引：
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/rag/index -Body (@{
+  raw_file_ids = @("raw_xxx")
+  force_rebuild = $true
+} | ConvertTo-Json) -ContentType "application/json"
+```
+
+查询并返回引用：
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8010/api/rag/query -Body (@{
+  question = "动作电位是什么？"
+  top_k = 5
+  raw_file_ids = @("raw_xxx")
+} | ConvertTo-Json) -ContentType "application/json"
+```
+
+当前 RAG 是本地词项 Evidence Index MVP，先保证 `citations` 和 `source_chunks` 稳定，后续再替换为向量库 / BM25 混合检索。
+
 ## 前端启动
 
 ```powershell
