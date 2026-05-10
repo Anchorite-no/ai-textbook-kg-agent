@@ -1,6 +1,6 @@
 /** 中栏：图谱画布。GraphToolbar + KnowledgeGraph + NodeInspector。 */
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { GraphToolbar } from "@/components/graph/GraphToolbar";
 import { KnowledgeGraph } from "@/components/graph/KnowledgeGraph";
 import { EdgeLegend } from "@/components/graph/EdgeLegend";
@@ -12,7 +12,26 @@ export function CenterCanvas() {
   const { data, isLoading, isFetching, error, refetch } = useGraphQuery();
   const selectedNodeId = useUIStore((s) => s.selectedNodeId);
   const setSelectedNodeId = useUIStore((s) => s.setSelectedNodeId);
+  const searchKeyword = useUIStore((s) => s.searchKeyword);
   const { toggle: toggleFullscreen } = useFullscreen();
+
+  const filtered = useMemo(() => {
+    const nodes = data?.nodes ?? [];
+    const edges = data?.edges ?? [];
+    const keyword = searchKeyword.trim().toLowerCase();
+    if (!keyword) return { nodes, edges };
+    const kept = new Set(
+      nodes
+        .filter((node) =>
+          `${node.name} ${node.definition ?? ""} ${(node.aliases ?? []).join(" ")}`.toLowerCase().includes(keyword)
+        )
+        .map((node) => node.id)
+    );
+    return {
+      nodes: nodes.filter((node) => kept.has(node.id)),
+      edges: edges.filter((edge) => kept.has(edge.source_node_id) && kept.has(edge.target_node_id))
+    };
+  }, [data?.edges, data?.nodes, searchKeyword]);
 
   // ESC 关闭 NodeInspector
   useEffect(() => {
@@ -27,8 +46,8 @@ export function CenterCanvas() {
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <GraphToolbar
-        nodeCount={data?.meta.nodeCount ?? 0}
-        edgeCount={data?.meta.edgeCount ?? 0}
+        nodeCount={filtered.nodes.length}
+        edgeCount={filtered.edges.length}
         fetching={isFetching}
         onRefresh={() => refetch()}
         onResetView={() => {
@@ -40,8 +59,8 @@ export function CenterCanvas() {
       />
       <div className="flex-1 relative flex flex-col min-h-0">
         <KnowledgeGraph
-          nodes={data?.nodes}
-          edges={data?.edges}
+          edges={filtered.edges}
+          nodes={filtered.nodes}
           loading={isLoading}
           error={error instanceof Error ? error.message : null}
           onRetry={() => refetch()}

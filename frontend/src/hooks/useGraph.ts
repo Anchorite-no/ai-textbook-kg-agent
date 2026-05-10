@@ -1,12 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { graphApi } from "@/api/graph";
 import { useUIStore } from "@/store/uiStore";
+import { useRawFileContext } from "@/hooks/useRawFileContext";
 
 export function useGraphQuery() {
   const mode = useUIStore((s) => s.graphMode);
+  const topN = useUIStore((s) => s.graphTopN);
+  const { selectedTextbookId, rawFileIds } = useRawFileContext();
   return useQuery({
-    queryKey: ["graph", mode],
-    queryFn: () => graphApi.fetchGraph(mode),
+    queryKey: ["graph", mode, selectedTextbookId, rawFileIds.join(","), topN],
+    queryFn: () => graphApi.fetchGraph({
+      mode,
+      rawFileId: selectedTextbookId,
+      rawFileIds,
+      topN
+    }),
     staleTime: 0
   });
 }

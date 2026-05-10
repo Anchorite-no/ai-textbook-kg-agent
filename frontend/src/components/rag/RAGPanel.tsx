@@ -3,12 +3,14 @@ import { useState, useRef, useEffect } from "react";
 import { Button, EmptyState, Tag } from "@/components/_kit";
 import { cn } from "@/utils/cn";
 import { ragApi } from "@/api/rag";
-import type { RAGQueryResponse, RAGCitation } from "@/types/api";
+import { useRawFileContext } from "@/hooks/useRawFileContext";
+import type { GraphRagQueryResponse, RagCitation } from "@/types/api";
 
 interface HistoryItem {
   question: string;
   answer: string;
-  citations: RAGCitation[];
+  citations: RagCitation[];
+  meta?: Pick<GraphRagQueryResponse, "intent" | "node_hits" | "paths" | "decisions">;
   loading?: boolean;
 }
 
@@ -16,6 +18,7 @@ export function RAGPanel() {
   const [query, setQuery] = useState("");
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { rawFileIds } = useRawFileContext();
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -28,11 +31,22 @@ export function RAGPanel() {
     setHistory((h) => [...h, { question: q, answer: "", citations: [], loading: true }]);
 
     try {
-      const res: RAGQueryResponse = await ragApi.queryRAG(q);
+      const res = await ragApi.queryGraphRAG(q, 5, rawFileIds);
       setHistory((h) =>
         h.map((item, i) =>
           i === h.length - 1
-            ? { question: q, answer: res.answer, citations: res.citations, loading: false }
+            ? {
+                question: q,
+                answer: res.answer,
+                citations: res.citations ?? [],
+                meta: {
+                  intent: res.intent,
+                  node_hits: res.node_hits,
+                  paths: res.paths,
+                  decisions: res.decisions
+                },
+                loading: false
+              }
             : item
         )
       );
@@ -85,6 +99,14 @@ export function RAGPanel() {
                     <p className="text-body text-text-default leading-relaxed whitespace-pre-wrap">
                       {item.answer}
                     </p>
+                    {item.meta ? (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        <Tag size="sm" variant="brand">{item.meta.intent}</Tag>
+                        <Tag size="sm" variant="outline">{item.meta.node_hits?.length ?? 0} 节点</Tag>
+                        <Tag size="sm" variant="outline">{item.meta.paths?.length ?? 0} 路径</Tag>
+                        <Tag size="sm" variant="outline">{item.meta.decisions?.length ?? 0} 决策</Tag>
+                      </div>
+                    ) : null}
                     {item.citations.length > 0 ? (
                       <div className="mt-3 flex flex-col gap-1.5">
                         <span className="text-[11px] uppercase tracking-wide text-text-muted font-medium">

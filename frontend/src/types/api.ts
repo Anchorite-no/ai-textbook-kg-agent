@@ -30,13 +30,14 @@ export type TextbookListResponse = Schemas["TextbookListResponse"];
 export type TextbookUploadResponse = Schemas["TextbookUploadResponse"];
 export type TextbookUploadError = Schemas["TextbookUploadError"];
 export type TextbookBatchUploadResponse = Schemas["TextbookBatchUploadResponse"];
+export type AsyncTextbookParseResponse = Schemas["AsyncTextbookParseResponse"];
 export type SampleBookSummary = Schemas["SampleBookSummary"];
 export type SampleDatasetResponse = Schemas["SampleDatasetResponse"];
 export type SampleDatasetPrepareRequest = Schemas["SampleDatasetPrepareRequest"];
 export type SampleDatasetPrepareResponse = Schemas["SampleDatasetPrepareResponse"];
 export type OrganizeWorkflowAcceptedResponse = Schemas["OrganizeWorkflowAcceptedResponse"];
+export type JobRetryResponse = Schemas["JobRetryResponse"];
 
-// Phase 3：图谱（GPT 已建好）
 export type KnowledgeNode = Schemas["KnowledgeNode"];
 export type KnowledgeNodeType = Schemas["KnowledgeNodeType"];
 export type KnowledgeEdge = Schemas["KnowledgeEdge"];
@@ -45,6 +46,45 @@ export type GraphResponse = Schemas["GraphResponse"];
 export type GraphBuildRequest = Schemas["GraphBuildRequest"];
 export type GraphBuildResponse = Schemas["GraphBuildResponse"];
 export type GraphNodeDetailResponse = Schemas["GraphNodeDetailResponse"];
+export type LayeredGraphBuildRequest = Schemas["LayeredGraphBuildRequest"];
+export type LayeredGraphBuildResponse = Schemas["LayeredGraphBuildResponse"];
+export type LayeredGraphResponse = Schemas["LayeredGraphResponse"];
+
+export type RagIndexRequest = Schemas["RagIndexRequest"];
+export type RagIndexStatus = Schemas["RagIndexStatus"];
+export type RagIndexResponse = Schemas["RagIndexResponse"];
+export type RagQueryRequest = Schemas["RagQueryRequest"];
+export type RagCitation = Schemas["RagCitation"];
+export type RagQueryResponse = Schemas["RagQueryResponse"];
+export type GraphRagQueryRequest = Schemas["GraphRagQueryRequest"];
+export type GraphRagQueryResponse = Schemas["GraphRagQueryResponse"];
+export type GraphRagStatus = Schemas["GraphRagStatus"];
+export type GraphRagNodeHit = Schemas["GraphRagNodeHit"];
+export type GraphRagPath = Schemas["GraphRagPath"];
+export type ReportGenerateRequest = Schemas["ReportGenerateRequest"];
+export type ReportGenerateResponse = Schemas["ReportGenerateResponse"];
+
+export type AlignmentBuildRequest = Schemas["AlignmentBuildRequest"];
+export type AlignmentResponse = Schemas["AlignmentResponse"];
+export type AlignmentBuildResponse = Schemas["AlignmentBuildResponse"];
+export type IntegrationAction = Schemas["IntegrationAction"];
+export type IntegrationBuildRequest = Schemas["IntegrationBuildRequest"];
+export type IntegrationDecision = Schemas["IntegrationDecision"];
+export type IntegratedConcept = Schemas["IntegratedConcept"];
+export type CompressionStats = Schemas["CompressionStats"];
+export type IntegrationResponse = Schemas["IntegrationResponse"];
+export type IntegrationBuildResponse = Schemas["IntegrationBuildResponse"];
+
+export type DialogueMessageRole = Schemas["DialogueMessageRole"];
+export type DialogueMessage = Schemas["DialogueMessage"];
+export type DialogueMessageRequest = Schemas["DialogueMessageRequest"];
+export type DialogueMessageResponse = Schemas["DialogueMessageResponse"];
+export type DialogueHistoryResponse = Schemas["DialogueHistoryResponse"];
+export type TeacherEdit = Schemas["TeacherEdit"];
+export type TeacherEditCreateRequest = Schemas["TeacherEditCreateRequest"];
+export type TeacherEditApplyResponse = Schemas["TeacherEditApplyResponse"];
+export type TeacherEditListResponse = Schemas["TeacherEditListResponse"];
+export type DecisionOverrideRequest = Schemas["DecisionOverrideRequest"];
 
 export type ApiErrorResponse = Schemas["ApiErrorResponse"];
 
@@ -92,128 +132,4 @@ export interface GraphPayload {
     nodeCount: number;
     edgeCount: number;
   };
-}
-
-/* ---------- §C 后端已建但 schema 未在 openapi.snapshot.json 的实体 ---------- */
-
-// ── RAG ──
-
-export interface RAGIndexRequest {
-  raw_file_ids: string[];
-  force_rebuild?: boolean;
-  max_chunks?: number | null;
-}
-
-export interface RAGIndexStatus {
-  status: "empty" | "ready";
-  textbook_count: number;
-  chunk_count: number;
-  raw_file_ids: string[];
-  index_path: string | null;
-  updated_at: string | null;
-  metadata: Record<string, unknown>;
-}
-
-export interface RAGIndexResponse {
-  job: JobRecord;
-  status: RAGIndexStatus;
-}
-
-export interface RAGQueryRequest {
-  question: string;
-  top_k?: number;
-  raw_file_ids?: string[];
-}
-
-export interface RAGCitation {
-  chunk_id: string;
-  raw_file_id: string;
-  textbook: string;
-  chapter: string | null;
-  source_locator: SourceLocator;
-  relevance_score: number;
-  quote: string;
-  metadata: Record<string, unknown>;
-}
-
-export interface RAGQueryResponse {
-  question: string;
-  answer: string;
-  citations: RAGCitation[];
-  source_chunks: Chunk[];
-  metadata: Record<string, unknown>;
-}
-
-// ── Integration ──
-
-export type IntegrationAction = "merge" | "keep" | "remove" | "refine" | "conflict";
-
-export interface IntegrationDecision {
-  id: string;
-  cluster_id: string | null;
-  action: IntegrationAction;
-  target_node_ids: string[];
-  retained_content: string | null;
-  removed_redundancy: string | null;
-  reason: string;
-  confidence: number;
-  evidence_chunk_ids: string[];
-  created_at: string;
-  metadata: Record<string, unknown>;
-}
-
-export interface CompressionStats {
-  original_node_count: number;
-  integrated_node_count: number;
-  compression_ratio: number;
-  target_compression_ratio: number;
-  original_edge_count: number;
-  integrated_edge_count: number;
-}
-
-export interface IntegrationResponse {
-  id: string;
-  raw_file_ids: string[];
-  alignment_id: string | null;
-  decisions: IntegrationDecision[];
-  integrated_concepts: unknown[];
-  compression_stats: CompressionStats;
-  generated_at: string;
-  metadata: Record<string, unknown>;
-}
-
-// ── Dialogue ──
-
-export type DialogueMessageRole = "user" | "assistant";
-
-export interface DialogueMessage {
-  id: string;
-  role: DialogueMessageRole;
-  content: string;
-  raw_file_ids: string[];
-  teacher_edit_ids: string[];
-  created_by: string | null;
-  created_at: string;
-  metadata: Record<string, unknown>;
-}
-
-export interface DialogueMessageRequest {
-  message: string;
-  raw_file_ids?: string[];
-  created_by?: string | null;
-  target_decision_id?: string | null;
-}
-
-export interface DialogueMessageResponse {
-  user_message: DialogueMessage;
-  assistant_message: DialogueMessage;
-  edits: unknown[];
-  integration: IntegrationResponse | null;
-  metadata: Record<string, unknown>;
-}
-
-export interface DialogueHistoryResponse {
-  raw_file_ids: string[];
-  messages: DialogueMessage[];
-  count: number;
 }

@@ -1,13 +1,15 @@
 import type {
-  RAGIndexRequest,
-  RAGIndexResponse,
-  RAGIndexStatus,
-  RAGQueryResponse
+  GraphRagQueryResponse,
+  GraphRagStatus,
+  RagIndexRequest,
+  RagIndexResponse,
+  RagIndexStatus,
+  RagQueryResponse
 } from "@/types/api";
 
-export async function indexRAG(_body: RAGIndexRequest): Promise<RAGIndexResponse> {
+export async function indexRAG(_body: RagIndexRequest): Promise<RagIndexResponse> {
   await new Promise((r) => setTimeout(r, 300));
-  const status: RAGIndexStatus = {
+  const status: RagIndexStatus = {
     status: "ready",
     textbook_count: 2,
     chunk_count: 2160,
@@ -33,7 +35,7 @@ export async function indexRAG(_body: RAGIndexRequest): Promise<RAGIndexResponse
   };
 }
 
-export async function getRAGStatus(): Promise<RAGIndexStatus> {
+export async function getRAGStatus(): Promise<RagIndexStatus> {
   await new Promise((r) => setTimeout(r, 200));
   return {
     status: "ready",
@@ -46,7 +48,7 @@ export async function getRAGStatus(): Promise<RAGIndexStatus> {
   };
 }
 
-export async function queryRAG(question: string, _topK = 5): Promise<RAGQueryResponse> {
+export async function queryRAG(question: string, _topK = 5): Promise<RagQueryResponse> {
   await new Promise((r) => setTimeout(r, 600));
   return {
     question,
@@ -75,5 +77,34 @@ export async function queryRAG(question: string, _topK = 5): Promise<RAGQueryRes
     ],
     source_chunks: [],
     metadata: {}
+  };
+}
+
+export async function getGraphRAGStatus(): Promise<GraphRagStatus> {
+  return {
+    status: "ready",
+    rag_index_status: await getRAGStatus(),
+    graph_count: 2,
+    node_count: 50,
+    edge_count: 90,
+    alignment_available: true,
+    integration_available: true,
+    raw_file_ids: ["raw_mock_a", "raw_mock_b"],
+    metadata: {}
+  };
+}
+
+export async function queryGraphRAG(question: string): Promise<GraphRagQueryResponse> {
+  const res = await queryRAG(question);
+  return {
+    question,
+    intent: "hybrid",
+    answer: res.answer,
+    citations: res.citations,
+    source_chunks: res.source_chunks,
+    node_hits: [],
+    paths: [],
+    decisions: [],
+    metadata: { mock: true }
   };
 }

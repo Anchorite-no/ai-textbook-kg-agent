@@ -15,7 +15,7 @@ export async function sendMessage(body: DialogueMessageRequest): Promise<Dialogu
   return {
     user_message: {
       id: `msg_u_${Date.now()}`,
-      role: "user",
+      role: "teacher",
       content: body.message,
       raw_file_ids: body.raw_file_ids ?? [],
       teacher_edit_ids: [],

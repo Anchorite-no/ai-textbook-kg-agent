@@ -1,71 +1,82 @@
-/** 整合报告面板。plan 09 §4.6 + plan 16 §11.3。
- *  - Markdown 预览（react-markdown）
- *  - 生成报告按钮
- *  - 下载 / 复制按钮 */
-
 import { FileText, Download, Copy, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import { Button, EmptyState } from "@/components/_kit";
+import { integrationApi } from "@/api/integration";
+import { ragApi } from "@/api/rag";
+import { reportApi } from "@/api/report";
+import { toastStore } from "@/components/layout/ToastViewport";
+import { useRawFileContext } from "@/hooks/useRawFileContext";
+import { useUIStore } from "@/store/uiStore";
 import { cn } from "@/utils/cn";
 
-const MOCK_REPORT = `# 学科知识整合报告
-
-## 概览
-
-- **教材数量**: 2 本
-- **原始节点**: 120 个
-- **整合后节点**: 85 个
-- **压缩率**: 29.2%
-
-## 整合决策
-
-### 合并决策
-
-1. **心脏 ← 心脏结构**
-   - 理由：两者指代同一概念，定义高度重叠
-   - 置信度：0.95
-
-2. **血压 ← 动脉血压**
-   - 理由：血压通常指动脉血压，临床常用术语
-   - 置信度：0.92
-
-### 保留决策
-
-1. **收缩压 / 舒张压**
-   - 理由：两者是血压的不同维度，需独立保留
-   - 置信度：0.98
-
-## 冲突处理
-
-暂无冲突。
-
----
-
-*报告生成时间：2026-05-10 12:30*
-`;
-
 export function ReportPanel() {
+  const { rawFileIds, textbooks, dataset } = useRawFileContext();
+  const reportGenerateTick = useUIStore((s) => s.reportGenerateTick);
   const [report, setReport] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
 
-  function handleGenerate() {
+  const integration = useQuery({
+    queryKey: ["integration", rawFileIds.join(","), "report"],
+    queryFn: () => integrationApi.getIntegration(rawFileIds),
+    enabled: rawFileIds.length >= 2,
+    retry: false
+  });
+  const ragStatus = useQuery({
+    queryKey: ["rag", "status"],
+    queryFn: ragApi.getRAGStatus,
+    retry: false
+  });
+  const graphRagStatus = useQuery({
+    queryKey: ["graphrag", "status", rawFileIds.join(",")],
+    queryFn: () => ragApi.getGraphRAGStatus(rawFileIds),
+    enabled: rawFileIds.length > 0,
+    retry: false
+  });
+
+  useEffect(() => {
+    if (reportGenerateTick > 0) handleGenerate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportGenerateTick]);
+
+  async function handleGenerate() {
     setGenerating(true);
-    // TODO: 接入 report API
-    setTimeout(() => {
-      setReport(MOCK_REPORT);
+    try {
+      const generated = await reportApi.generateReport({
+        raw_file_ids: rawFileIds,
+        title: `${dataset?.title ?? "当前教材集合"}整合报告`,
+        include_dataset_metrics: true,
+        include_graph_metrics: true,
+        include_integration: true
+      });
+      setReport(generated.markdown);
+      toastStore.push({ tone: "success", title: "报告已生成", description: "内容来自后端真实教材、索引和整合结果" });
+    } catch {
+      const next = buildReport({
+        datasetTitle: dataset?.title ?? "当前教材集合",
+        textbooks,
+        rawFileIds,
+        integration: integration.data,
+        ragStatus: ragStatus.data,
+        graphRagStatus: graphRagStatus.data
+      });
+      setReport(next);
+      toastStore.push({ tone: "warning", title: "后端报告接口暂不可用", description: "已使用当前真实接口缓存生成本地摘要" });
+    } finally {
       setGenerating(false);
-    }, 1200);
+    }
   }
 
-  function handleCopy() {
+  async function handleCopy() {
     if (!report) return;
-    navigator.clipboard.writeText(report);
+    await navigator.clipboard.writeText(report);
+    toastStore.push({ tone: "success", title: "报告已复制" });
   }
 
   function handleDownload() {
     if (!report) return;
-    const blob = new Blob([report], { type: "text/markdown" });
+    const blob = new Blob([report], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -80,7 +91,7 @@ export function ReportPanel() {
         <EmptyState
           icon={<FileText />}
           title="整合报告"
-          description="整合完成后可生成 Markdown 报告。"
+          description="基于当前教材、RAG 索引和跨教材整合结果生成 Markdown 报告。"
           action={
             <Button
               variant="primary"
@@ -101,20 +112,13 @@ export function ReportPanel() {
       <div className="px-3 py-2 border-b border-border-soft flex items-center justify-between">
         <h3 className="text-h2 text-text-strong">整合报告</h3>
         <div className="flex items-center gap-1">
-          <Button
-            size="sm"
-            variant="ghost"
-            leftIcon={<Copy className="size-3" />}
-            onClick={handleCopy}
-          >
+          <Button size="sm" variant="ghost" leftIcon={<Sparkles className="size-3" />} onClick={handleGenerate} loading={generating}>
+            重生成
+          </Button>
+          <Button size="sm" variant="ghost" leftIcon={<Copy className="size-3" />} onClick={handleCopy}>
             复制
           </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            leftIcon={<Download className="size-3" />}
-            onClick={handleDownload}
-          >
+          <Button size="sm" variant="ghost" leftIcon={<Download className="size-3" />} onClick={handleDownload}>
             下载
           </Button>
         </div>
@@ -133,4 +137,62 @@ export function ReportPanel() {
       </div>
     </div>
   );
+}
+
+function buildReport(input: {
+  datasetTitle: string;
+  textbooks: Array<{ title: string; raw_file_id: string; chunk_count: number; section_count: number }>;
+  rawFileIds: string[];
+  integration: Awaited<ReturnType<typeof integrationApi.getIntegration>> | undefined;
+  ragStatus: Awaited<ReturnType<typeof ragApi.getRAGStatus>> | undefined;
+  graphRagStatus: Awaited<ReturnType<typeof ragApi.getGraphRAGStatus>> | undefined;
+}): string {
+  const stats = input.integration?.compression_stats;
+  const decisions = input.integration?.decisions ?? [];
+  const byAction = (action: string) => decisions.filter((decision) => decision.action === action);
+  const topDecisions = decisions.slice(0, 12);
+  return [
+    `# ${input.datasetTitle}整合报告`,
+    "",
+    `生成时间：${new Date().toLocaleString("zh-CN")}`,
+    "",
+    "## 数据概览",
+    "",
+    `- 教材数量：${input.rawFileIds.length} 本`,
+    `- 章节数量：${input.textbooks.reduce((sum, item) => sum + item.section_count, 0).toLocaleString()}`,
+    `- Chunk 数量：${input.textbooks.reduce((sum, item) => sum + item.chunk_count, 0).toLocaleString()}`,
+    `- RAG 索引：${input.ragStatus?.status ?? "unknown"}，${(input.ragStatus?.chunk_count ?? 0).toLocaleString()} chunks`,
+    `- GraphRAG：${input.graphRagStatus?.status ?? "unknown"}，${input.graphRagStatus?.node_count ?? 0} 节点 / ${input.graphRagStatus?.edge_count ?? 0} 边`,
+    "",
+    "## 教材清单",
+    "",
+    ...input.textbooks.map((book, index) => `${index + 1}. ${book.title}（${book.section_count} 章节，${book.chunk_count} chunks）`),
+    "",
+    "## 整合压缩",
+    "",
+    stats
+      ? `- 压缩率：${(stats.compression_ratio * 100).toFixed(1)}%（目标 ${(stats.target_compression_ratio * 100).toFixed(0)}%）`
+      : "- 尚未读取到整合压缩结果。",
+    stats ? `- 节点：${stats.original_node_count} -> ${stats.integrated_node_count}` : "",
+    stats ? `- 字符：${stats.original_char_count.toLocaleString()} -> ${stats.retained_char_count.toLocaleString()}` : "",
+    stats ? `- 证据覆盖率：${(stats.evidence_coverage_ratio * 100).toFixed(1)}%` : "",
+    "",
+    "## 决策分布",
+    "",
+    `- 合并：${byAction("merge").length}`,
+    `- 保留：${byAction("keep").length}`,
+    `- 移除：${byAction("remove").length}`,
+    `- 细化：${byAction("refine").length}`,
+    `- 冲突：${byAction("conflict").length}`,
+    "",
+    "## 代表性整合决策",
+    "",
+    ...(topDecisions.length
+      ? topDecisions.map((decision, index) => `${index + 1}. **${decision.action}**：${decision.reason}`)
+      : ["暂无可展示决策。"]),
+    "",
+    "## 证据链说明",
+    "",
+    "所有教材结构、知识节点、RAG 引用和整合决策均保留 `source_locator`，可回溯到原始教材页码、章节、chunk 或办公文档位置。"
+  ].filter(Boolean).join("\n");
 }

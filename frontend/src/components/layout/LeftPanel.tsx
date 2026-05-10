@@ -1,25 +1,71 @@
 /** 左栏：教材区。UploadZone + TextbookList + ChapterTree。 */
 
 import { BookOpen, Plus, PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button, EmptyState, IconButton, Tooltip } from "@/components/_kit";
 import { useUIStore } from "@/store/uiStore";
 import { useTextbooksQuery } from "@/hooks/useTextbooks";
+import { jobsApi } from "@/api/jobs";
+import { workflowsApi } from "@/api/workflows";
+import { toastStore } from "@/components/layout/ToastViewport";
 import { UploadZone } from "@/components/textbooks/UploadZone";
 import { TextbookList } from "@/components/textbooks/TextbookList";
-import { ChapterTree } from "@/components/textbooks/ChapterTree";
 
 export function LeftPanel() {
+  const queryClient = useQueryClient();
   const collapsed = useUIStore((s) => s.leftCollapsed);
   const toggleLeftCollapsed = useUIStore((s) => s.toggleLeftCollapsed);
+  const selectedTextbookId = useUIStore((s) => s.selectedTextbookId);
+  const setSelectedTextbookId = useUIStore((s) => s.setSelectedTextbookId);
+  const workflowUseLLM = useUIStore((s) => s.workflowUseLLM);
   const { data: textbooks, isLoading } = useTextbooksQuery();
-  const [selectedTextbookId, setSelectedTextbookId] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
 
+  useEffect(() => {
+    if (!selectedTextbookId && textbooks?.[0]?.raw_file_id) {
+      setSelectedTextbookId(textbooks[0].raw_file_id);
+    }
+  }, [selectedTextbookId, setSelectedTextbookId, textbooks]);
+
+  const uploadWorkflow = useMutation({
+    mutationFn: async (files: File[]) => {
+      const accepted = await workflowsApi.organizeFiles(files, {
+        useLlm: workflowUseLLM,
+        buildGraph: true,
+        buildLayeredGraphs: true,
+        buildRag: true,
+        buildAlignmentGraph: true,
+        buildIntegrationResult: true,
+        maxSections: 300,
+        maxNodesPerSection: 12,
+        alignmentMinConfidence: 0.62
+      });
+      return jobsApi.waitForJob(accepted.job.id, 300_000);
+    },
+    onSuccess: async (job) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["textbooks"] }),
+        queryClient.invalidateQueries({ queryKey: ["dataset", "seven-books"] }),
+        queryClient.invalidateQueries({ queryKey: ["graph"] }),
+        queryClient.invalidateQueries({ queryKey: ["integration"] }),
+        queryClient.invalidateQueries({ queryKey: ["rag"] }),
+        queryClient.invalidateQueries({ queryKey: ["dialogue-history"] })
+      ]);
+      const rawFileIds = rawIdsFromJob(job.result);
+      if (rawFileIds[0]) setSelectedTextbookId(rawFileIds[0]);
+      setShowUpload(false);
+      toastStore.push({
+        tone: "success",
+        title: "文件已整理生成",
+        description: `${rawFileIds.length || 1} 个文件已完成解析、图谱、RAG 和整合流程`
+      });
+    }
+  });
+
   function handleUpload(files: File[]) {
-    console.log("Upload files:", files);
-    // TODO: 接入 textbooks upload API
-    setShowUpload(false);
+    if (!files.length || uploadWorkflow.isPending) return;
+    uploadWorkflow.mutate(files);
   }
 
   if (collapsed) {
@@ -75,7 +121,13 @@ export function LeftPanel() {
         </div>
       </div>
       <div className="scroll-region flex flex-col">
-        {showUpload ? <UploadZone onUpload={handleUpload} /> : null}
+        {showUpload ? (
+          <UploadZone
+            onUpload={handleUpload}
+            disabled={uploadWorkflow.isPending}
+            status={uploadWorkflow.isPending ? "正在解析并生成知识图谱…" : undefined}
+          />
+        ) : null}
 
         {isLoading ? (
           <div className="p-3">
@@ -97,17 +149,15 @@ export function LeftPanel() {
               selectedId={selectedTextbookId}
               onSelect={setSelectedTextbookId}
             />
-            <div className="border-t border-border-soft">
-              <div className="px-3 py-2 bg-surface-card">
-                <h3 className="text-meta uppercase tracking-wide text-text-muted font-medium">
-                  章节
-                </h3>
-              </div>
-              <ChapterTree textbookId={selectedTextbookId} />
-            </div>
           </>
         )}
       </div>
     </>
   );
+}
+
+function rawIdsFromJob(result: unknown): string[] {
+  if (!result || typeof result !== "object") return [];
+  const value = (result as { raw_file_ids?: unknown }).raw_file_ids;
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }

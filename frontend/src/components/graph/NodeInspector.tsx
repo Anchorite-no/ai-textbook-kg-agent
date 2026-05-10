@@ -1,11 +1,12 @@
 /** 节点详情浮层。plan 09 §5.3 + plan 16 §10.4。
  *  右下角 16px 偏移，宽 360，最大高 60vh，内部滚动。 */
 
-import { BookOpen, ExternalLink, X } from "lucide-react";
+import { BookOpen, Copy, X } from "lucide-react";
 import { IconButton, Tag, Tooltip } from "@/components/_kit";
 import { cn } from "@/utils/cn";
 import { useNodeDetailQuery } from "@/hooks/useGraph";
 import { getBookColor } from "./colors";
+import { toastStore } from "@/components/layout/ToastViewport";
 
 export interface NodeInspectorProps {
   nodeId: string | null;
@@ -99,12 +100,16 @@ export function NodeInspector({ nodeId, onClose }: NodeInspectorProps) {
                   {node.source_locator.locator_text}
                 </span>
               </div>
-              <Tooltip content="打开来源 chunk（todo）">
+              <Tooltip content="复制来源定位">
                 <IconButton
-                  label="打开来源"
+                  label="复制来源定位"
                   size="sm"
                   tooltip={false}
-                  icon={<ExternalLink className="size-3" />}
+                  icon={<Copy className="size-3" />}
+                  onClick={() => {
+                    navigator.clipboard.writeText(node.source_locator.locator_text);
+                    toastStore.push({ tone: "success", title: "来源定位已复制" });
+                  }}
                 />
               </Tooltip>
             </div>

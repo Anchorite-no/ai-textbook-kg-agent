@@ -179,8 +179,8 @@ class GraphBuildRequest(ContractModel):
     raw_file_id: str
     section_ids: list[str] = Field(default_factory=list)
     force_rebuild: bool = False
-    max_sections: int = Field(default=20, ge=1, le=200)
-    max_nodes_per_section: int = Field(default=8, ge=1, le=30)
+    max_sections: int = Field(default=200, ge=1, le=3000)
+    max_nodes_per_section: int = Field(default=12, ge=1, le=80)
     use_llm: bool = True
 
 
@@ -257,8 +257,8 @@ class LayeredGraphBuildRequest(ContractModel):
     raw_file_id: str
     force_rebuild: bool = False
     build_missing_concept_graph: bool = True
-    max_sections: int = Field(default=20, ge=1, le=200)
-    max_nodes_per_section: int = Field(default=8, ge=1, le=30)
+    max_sections: int = Field(default=200, ge=1, le=3000)
+    max_nodes_per_section: int = Field(default=12, ge=1, le=80)
     use_llm: bool = True
 
 
@@ -654,6 +654,23 @@ class GraphRagStatus(ContractModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class ReportGenerateRequest(ContractModel):
+    raw_file_ids: list[str] = Field(default_factory=list)
+    title: str | None = None
+    include_integration: bool = True
+    include_graph_metrics: bool = True
+    include_dataset_metrics: bool = True
+
+
+class ReportGenerateResponse(ContractModel):
+    id: str
+    raw_file_ids: list[str] = Field(default_factory=list)
+    title: str
+    markdown: str
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class ParsedTextbook(ContractModel):
     id: str
     raw_file: RawFile
@@ -917,8 +934,8 @@ class SampleDatasetPrepareRequest(ContractModel):
     build_alignment: bool = True
     build_integration: bool = True
     use_llm: bool = False
-    max_sections: int = Field(default=120, ge=1, le=200)
-    max_nodes_per_section: int = Field(default=8, ge=1, le=30)
+    max_sections: int = Field(default=1000, ge=1, le=3000)
+    max_nodes_per_section: int = Field(default=12, ge=1, le=80)
     alignment_min_confidence: float = Field(default=0.62, ge=0, le=1)
     alignment_max_nodes: int = Field(default=4000, ge=2, le=10000)
     integration_target_compression_ratio: float = Field(default=0.30, gt=0, le=0.80)

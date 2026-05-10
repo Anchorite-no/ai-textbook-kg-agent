@@ -6,7 +6,7 @@
 
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, FileText, AlertCircle } from "lucide-react";
+import { Upload, FileText, AlertCircle, Loader2 } from "lucide-react";
 import { Button, Tag } from "@/components/_kit";
 import { cn } from "@/utils/cn";
 
@@ -25,9 +25,10 @@ const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 export interface UploadZoneProps {
   onUpload: (files: File[]) => void;
   disabled?: boolean;
+  status?: string;
 }
 
-export function UploadZone({ onUpload, disabled = false }: UploadZoneProps) {
+export function UploadZone({ onUpload, disabled = false, status }: UploadZoneProps) {
   const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback(
@@ -73,7 +74,7 @@ export function UploadZone({ onUpload, disabled = false }: UploadZoneProps) {
           )}
           aria-hidden
         >
-          {isDragActive ? <Upload className="size-5" /> : <FileText className="size-5" />}
+          {disabled ? <Loader2 className="size-5 animate-spin" /> : isDragActive ? <Upload className="size-5" /> : <FileText className="size-5" />}
         </span>
         <div className="flex flex-col items-center gap-1 text-center">
           <p className="text-body text-text-default font-medium">
@@ -91,6 +92,12 @@ export function UploadZone({ onUpload, disabled = false }: UploadZoneProps) {
         </div>
         <p className="text-[11px] text-text-subtle">单个文件最大 100MB</p>
       </div>
+      {status ? (
+        <div className="mt-2 flex items-center gap-2 p-2 rounded-control bg-brand-50 border border-brand-200">
+          <Loader2 className="size-3.5 animate-spin text-brand-600 shrink-0" aria-hidden />
+          <p className="text-meta text-brand-700">{status}</p>
+        </div>
+      ) : null}
       {error ? (
         <div className="mt-2 flex items-start gap-2 p-2 rounded-control bg-status-error/5 border border-status-error/30">
           <AlertCircle className="size-3.5 text-status-error mt-0.5 shrink-0" aria-hidden />

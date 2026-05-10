@@ -18,6 +18,7 @@ const LEFT_COLLAPSED = 56;
 const RIGHT_DEFAULT = 420;
 const RIGHT_MIN = 360;
 const RIGHT_MAX = 560;
+const GRAPH_TOP_N_DEFAULT = 1000;
 
 export const layoutLimits = {
   leftDefault: LEFT_DEFAULT,
@@ -38,6 +39,7 @@ export interface UIState {
   activeRightTab: RightTab;
   theme: Theme;
   graphTopN: number;
+  workflowUseLLM: boolean;
 
   // ---- 非持久化 ----
   selectedTextbookId: string | null;
@@ -47,6 +49,7 @@ export interface UIState {
   graphMode: GraphMode;
   searchKeyword: string;
   relationFilters: string[];
+  reportGenerateTick: number;
 
   // ---- actions ----
   setLeftWidth: (w: number) => void;
@@ -59,12 +62,14 @@ export interface UIState {
   setTheme: (t: Theme) => void;
   setGraphMode: (m: GraphMode) => void;
   setGraphTopN: (n: number) => void;
+  setWorkflowUseLLM: (enabled: boolean) => void;
   setSelectedTextbookId: (id: string | null) => void;
   setSelectedNodeId: (id: string | null) => void;
   closeNodeDetail: () => void;
   setSelectedDecisionId: (id: string | null) => void;
   setSearchKeyword: (k: string) => void;
   setRelationFilters: (filters: string[]) => void;
+  requestReportGenerate: () => void;
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -80,7 +85,8 @@ export const useUIStore = create<UIState>()(
       rightHidden: false,
       activeRightTab: "integration",
       theme: "light",
-      graphTopN: 200,
+      graphTopN: GRAPH_TOP_N_DEFAULT,
+      workflowUseLLM: false,
 
       selectedTextbookId: null,
       selectedNodeId: null,
@@ -89,6 +95,7 @@ export const useUIStore = create<UIState>()(
       graphMode: "single",
       searchKeyword: "",
       relationFilters: [],
+      reportGenerateTick: 0,
 
       setLeftWidth: (w) => set({ leftWidth: clamp(w, LEFT_MIN, LEFT_MAX) }),
       setRightWidth: (w) => set({ rightWidth: clamp(w, RIGHT_MIN, RIGHT_MAX) }),
@@ -102,7 +109,8 @@ export const useUIStore = create<UIState>()(
         set({ theme });
       },
       setGraphMode: (graphMode) => set({ graphMode }),
-      setGraphTopN: (graphTopN) => set({ graphTopN }),
+      setGraphTopN: (graphTopN) => set({ graphTopN: clamp(graphTopN, 50, 1000) }),
+      setWorkflowUseLLM: (workflowUseLLM) => set({ workflowUseLLM }),
       setSelectedTextbookId: (selectedTextbookId) => set({ selectedTextbookId }),
       setSelectedNodeId: (selectedNodeId) =>
         set(selectedNodeId
@@ -111,7 +119,8 @@ export const useUIStore = create<UIState>()(
       closeNodeDetail: () => set({ selectedNodeId: null, nodeDetailOpen: false }),
       setSelectedDecisionId: (selectedDecisionId) => set({ selectedDecisionId }),
       setSearchKeyword: (searchKeyword) => set({ searchKeyword }),
-      setRelationFilters: (relationFilters) => set({ relationFilters })
+      setRelationFilters: (relationFilters) => set({ relationFilters }),
+      requestReportGenerate: () => set((s) => ({ reportGenerateTick: s.reportGenerateTick + 1 }))
     }),
     {
       name: PERSIST_KEY,
@@ -123,9 +132,10 @@ export const useUIStore = create<UIState>()(
         rightHidden: state.rightHidden,
         activeRightTab: state.activeRightTab,
         theme: state.theme,
-        graphTopN: state.graphTopN
+        graphTopN: state.graphTopN,
+        workflowUseLLM: state.workflowUseLLM
       }),
-      version: 1,
+      version: 2,
       onRehydrateStorage: () => (state) => {
         if (state?.theme) {
           document.documentElement.setAttribute("data-theme", state.theme);

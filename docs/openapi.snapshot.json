@@ -2166,6 +2166,67 @@
         }
       }
     },
+    "/api/report/generate": {
+      "post": {
+        "tags": [
+          "report"
+        ],
+        "summary": "Generate Report",
+        "operationId": "generate_report_api_report_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportGenerateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportGenerateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/workflows/organize": {
       "post": {
         "tags": [
@@ -2755,17 +2816,17 @@
           },
           "max_sections": {
             "type": "integer",
-            "maximum": 200.0,
+            "maximum": 3000.0,
             "minimum": 1.0,
             "title": "Max Sections",
-            "default": 80
+            "default": 300
           },
           "max_nodes_per_section": {
             "type": "integer",
-            "maximum": 30.0,
+            "maximum": 80.0,
             "minimum": 1.0,
             "title": "Max Nodes Per Section",
-            "default": 8
+            "default": 12
           },
           "alignment_min_confidence": {
             "type": "number",
@@ -3602,17 +3663,17 @@
           },
           "max_sections": {
             "type": "integer",
-            "maximum": 200.0,
+            "maximum": 3000.0,
             "minimum": 1.0,
             "title": "Max Sections",
-            "default": 20
+            "default": 200
           },
           "max_nodes_per_section": {
             "type": "integer",
-            "maximum": 30.0,
+            "maximum": 80.0,
             "minimum": 1.0,
             "title": "Max Nodes Per Section",
-            "default": 8
+            "default": 12
           },
           "use_llm": {
             "type": "boolean",
@@ -4767,17 +4828,17 @@
           },
           "max_sections": {
             "type": "integer",
-            "maximum": 200.0,
+            "maximum": 3000.0,
             "minimum": 1.0,
             "title": "Max Sections",
-            "default": 20
+            "default": 200
           },
           "max_nodes_per_section": {
             "type": "integer",
-            "maximum": 30.0,
+            "maximum": 80.0,
             "minimum": 1.0,
             "title": "Max Nodes Per Section",
-            "default": 8
+            "default": 12
           },
           "use_llm": {
             "type": "boolean",
@@ -5549,6 +5610,87 @@
         ],
         "title": "RawFile"
       },
+      "ReportGenerateRequest": {
+        "properties": {
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "include_integration": {
+            "type": "boolean",
+            "title": "Include Integration",
+            "default": true
+          },
+          "include_graph_metrics": {
+            "type": "boolean",
+            "title": "Include Graph Metrics",
+            "default": true
+          },
+          "include_dataset_metrics": {
+            "type": "boolean",
+            "title": "Include Dataset Metrics",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ReportGenerateRequest"
+      },
+      "ReportGenerateResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "raw_file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Raw File Ids"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "markdown": {
+            "type": "string",
+            "title": "Markdown"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "markdown"
+        ],
+        "title": "ReportGenerateResponse"
+      },
       "SampleBookSummary": {
         "properties": {
           "title": {
@@ -5682,17 +5824,17 @@
           },
           "max_sections": {
             "type": "integer",
-            "maximum": 200.0,
+            "maximum": 3000.0,
             "minimum": 1.0,
             "title": "Max Sections",
-            "default": 120
+            "default": 1000
           },
           "max_nodes_per_section": {
             "type": "integer",
-            "maximum": 30.0,
+            "maximum": 80.0,
             "minimum": 1.0,
             "title": "Max Nodes Per Section",
-            "default": 8
+            "default": 12
           },
           "alignment_min_confidence": {
             "type": "number",

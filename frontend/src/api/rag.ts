@@ -7,5 +7,7 @@ const impl = apiMode.rag === "live" ? live : mock;
 export const ragApi = {
   indexRAG: impl.indexRAG,
   getRAGStatus: impl.getRAGStatus,
-  queryRAG: impl.queryRAG
+  queryRAG: impl.queryRAG,
+  getGraphRAGStatus: "getGraphRAGStatus" in impl ? impl.getGraphRAGStatus : live.getGraphRAGStatus,
+  queryGraphRAG: "queryGraphRAG" in impl ? impl.queryGraphRAG : live.queryGraphRAG
 };

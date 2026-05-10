@@ -1,7 +1,9 @@
 import { GitMerge, TrendingDown, Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { EmptyState, Tag, ErrorState } from "@/components/_kit";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, EmptyState, Tag } from "@/components/_kit";
 import { integrationApi } from "@/api/integration";
+import { toastStore } from "@/components/layout/ToastViewport";
+import { useRawFileContext } from "@/hooks/useRawFileContext";
 import type { IntegrationDecision, IntegrationAction } from "@/types/api";
 
 const ACTION_TAG: Record<IntegrationAction, { label: string; variant: "brand" | "success" | "warning" | "error" | "info" | "outline" }> = {
@@ -11,12 +13,51 @@ const ACTION_TAG: Record<IntegrationAction, { label: string; variant: "brand" | 
   refine: { label: "细化", variant: "info" },
   conflict: { label: "冲突", variant: "warning" }
 };
+const OVERRIDE_ACTIONS: IntegrationAction[] = ["merge", "keep", "remove", "refine", "conflict"];
 
 export function IntegrationPanel() {
+  const queryClient = useQueryClient();
+  const { rawFileIds } = useRawFileContext();
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["integration"],
-    queryFn: () => integrationApi.getIntegration(),
+    queryKey: ["integration", rawFileIds.join(",")],
+    queryFn: () => integrationApi.getIntegration(rawFileIds),
+    enabled: rawFileIds.length >= 2,
     retry: false
+  });
+  const edits = useQuery({
+    queryKey: ["teacher-edits", rawFileIds.join(",")],
+    queryFn: () => integrationApi.listTeacherEdits(rawFileIds),
+    enabled: rawFileIds.length >= 2,
+    retry: false
+  });
+
+  const build = useMutation({
+    mutationFn: () => integrationApi.buildIntegration(rawFileIds),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["integration"] });
+      toastStore.push({ tone: "success", title: "整合结果已生成" });
+    }
+  });
+
+  const override = useMutation({
+    mutationFn: ({ decision, action }: { decision: IntegrationDecision; action: IntegrationAction }) =>
+      integrationApi.overrideDecision(decision.id, {
+        raw_file_ids: rawFileIds,
+        action,
+        retained_content: decision.retained_content ?? decision.reason,
+        removed_redundancy: decision.removed_redundancy ?? null,
+        reason: `教师在前端将决策调整为 ${ACTION_TAG[action]?.label ?? action}`,
+        confidence: 1,
+        created_by: "teacher"
+      }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["integration"] }),
+        queryClient.invalidateQueries({ queryKey: ["teacher-edits"] }),
+        queryClient.invalidateQueries({ queryKey: ["dialogue-history"] })
+      ]);
+      toastStore.push({ tone: "success", title: "教师覆盖已保存" });
+    }
   });
 
   if (isLoading) {
@@ -33,7 +74,12 @@ export function IntegrationPanel() {
         <EmptyState
           icon={<GitMerge />}
           title="整合面板"
-          description="完成图谱构建后这里会显示压缩比、决策列表与冲突。"
+          description={rawFileIds.length < 2 ? "至少需要两本教材才能生成跨教材整合决策。" : "尚未读取到整合结果，可以直接构建。"}
+          action={rawFileIds.length >= 2 ? (
+            <Button variant="primary" loading={build.isPending} onClick={() => build.mutate()}>
+              构建整合
+            </Button>
+          ) : undefined}
         />
       </div>
     );
@@ -51,14 +97,14 @@ export function IntegrationPanel() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Metric
-            label="节点"
+            label="节点压缩"
             before={stats.original_node_count}
             after={stats.integrated_node_count}
           />
           <Metric
-            label="边"
-            before={stats.original_edge_count}
-            after={stats.integrated_edge_count}
+            label="字符保留"
+            before={stats.original_char_count}
+            after={stats.retained_char_count}
           />
         </div>
         <div className="mt-3 flex items-center gap-2 text-meta text-text-muted">
@@ -68,19 +114,31 @@ export function IntegrationPanel() {
           </Tag>
           <span className="text-text-subtle">（目标 {(stats.target_compression_ratio * 100).toFixed(0)}%）</span>
         </div>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          <Tag size="sm" variant="brand">合并 {stats.merged_node_count}</Tag>
+          <Tag size="sm" variant="success">保留 {stats.kept_node_count}</Tag>
+          <Tag size="sm" variant="info">细化 {stats.refined_node_count}</Tag>
+          <Tag size="sm" variant="warning">冲突 {stats.conflict_count}</Tag>
+          <Tag size="sm" variant="outline">教师修改 {edits.data?.count ?? 0}</Tag>
+        </div>
       </div>
 
       {/* Decision list */}
       <div className="flex flex-col gap-2">
         <h3 className="text-[11px] uppercase tracking-wide text-text-muted font-medium">
-          整合决策（{data.decisions.length}）
+          整合决策（{(data.decisions ?? []).length}）
         </h3>
-        {data.decisions.length === 0 ? (
+        {(data.decisions ?? []).length === 0 ? (
           <p className="text-meta text-text-muted text-center py-4">暂无整合决策</p>
         ) : (
           <ul className="flex flex-col gap-1.5">
-            {data.decisions.map((d) => (
-              <DecisionRow key={d.id} decision={d} />
+            {(data.decisions ?? []).map((d) => (
+              <DecisionRow
+                key={d.id}
+                decision={d}
+                onOverride={(action) => override.mutate({ decision: d, action })}
+                disabled={override.isPending}
+              />
             ))}
           </ul>
         )}
@@ -105,7 +163,15 @@ function Metric({ label, before, after }: { label: string; before: number; after
   );
 }
 
-function DecisionRow({ decision }: { decision: IntegrationDecision }) {
+function DecisionRow({
+  decision,
+  onOverride,
+  disabled
+}: {
+  decision: IntegrationDecision;
+  onOverride: (action: IntegrationAction) => void;
+  disabled?: boolean;
+}) {
   const tag = ACTION_TAG[decision.action] ?? { label: decision.action, variant: "outline" as const };
   return (
     <li className="flex items-start gap-2 p-2.5 rounded-control bg-surface-input">
@@ -124,6 +190,19 @@ function DecisionRow({ decision }: { decision: IntegrationDecision }) {
       <span className="text-[11px] text-text-subtle tabular shrink-0 mt-0.5">
         {(decision.confidence * 100).toFixed(0)}%
       </span>
+      <div className="flex gap-1 shrink-0">
+        {OVERRIDE_ACTIONS.map((action) => (
+          <Button
+            key={action}
+            size="sm"
+            variant="ghost"
+            disabled={disabled || action === decision.action}
+            onClick={() => onOverride(action)}
+          >
+            {ACTION_TAG[action].label}
+          </Button>
+        ))}
+      </div>
     </li>
   );
 }

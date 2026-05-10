@@ -1,4 +1,10 @@
-import type { IntegrationResponse } from "@/types/api";
+import type {
+  DecisionOverrideRequest,
+  IntegrationBuildResponse,
+  IntegrationResponse,
+  TeacherEditApplyResponse,
+  TeacherEditListResponse
+} from "@/types/api";
 
 export async function getIntegration(_rawFileIds?: string[]): Promise<IntegrationResponse> {
   await new Promise((r) => setTimeout(r, 300));
@@ -36,19 +42,73 @@ export async function getIntegration(_rawFileIds?: string[]): Promise<Integratio
     ],
     integrated_concepts: [],
     compression_stats: {
+      original_char_count: 120000,
+      retained_char_count: 35040,
       original_node_count: 120,
       integrated_node_count: 85,
+      merged_node_count: 22,
+      kept_node_count: 51,
+      removed_node_count: 18,
+      refined_node_count: 9,
+      conflict_count: 1,
       compression_ratio: 0.292,
       target_compression_ratio: 0.30,
-      original_edge_count: 200,
-      integrated_edge_count: 150
+      node_reduction_ratio: 0.291,
+      evidence_coverage_ratio: 0.96,
+      metadata: {}
     },
     generated_at: new Date().toISOString(),
     metadata: {}
   };
 }
 
-export async function buildIntegration(_rawFileIds: string[]): Promise<unknown> {
+export async function buildIntegration(_rawFileIds: string[]): Promise<IntegrationBuildResponse> {
   await new Promise((r) => setTimeout(r, 400));
-  return { job_id: `job_integration_${Date.now()}` };
+  const integration = await getIntegration();
+  return {
+    job: {
+      id: `job_integration_${Date.now()}`,
+      job_type: "integration_build",
+      status: "completed",
+      progress: 100,
+      message: "mock integration built",
+      result: {},
+      error: null,
+      steps: [],
+      retryable: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      context_path: null
+    },
+    integration_output_path: "mock",
+    integration
+  };
+}
+
+export async function overrideDecision(
+  _decisionId: string,
+  _body: DecisionOverrideRequest
+): Promise<TeacherEditApplyResponse> {
+  const integration = await getIntegration();
+  return {
+    edit: {
+      id: `edit_${Date.now()}`,
+      target_type: "decision",
+      target_id: _decisionId,
+      operation: "override_decision",
+      before: {},
+      after: _body,
+      reason: _body.reason,
+      created_by: "teacher",
+      created_at: new Date().toISOString(),
+      affected_ids: [_decisionId],
+      metadata: {}
+    },
+    integration,
+    message: "mock override"
+  };
+}
+
+export async function listTeacherEdits(): Promise<TeacherEditListResponse> {
+  return { raw_file_ids: ["raw_mock_a", "raw_mock_b"], edits: [], count: 0 };
 }

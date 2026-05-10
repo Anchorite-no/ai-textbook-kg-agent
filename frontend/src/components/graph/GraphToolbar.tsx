@@ -15,8 +15,8 @@ export interface GraphToolbarProps {
 
 const modeOptions = [
   { value: "single" as GraphMode, label: "单本" },
-  { value: "merged" as GraphMode, label: "整合" },
-  { value: "compare" as GraphMode, label: "对比" }
+  { value: "merged" as GraphMode, label: "并列" },
+  { value: "compare" as GraphMode, label: "对照" }
 ];
 
 export function GraphToolbar({

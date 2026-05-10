@@ -94,7 +94,7 @@ def _workflow_endpoints(raw_file_ids: list[str]) -> dict[str, str]:
     }
     if raw_file_ids:
         endpoints["first_textbook"] = f"/api/textbooks/{raw_file_ids[0]}"
-        endpoints["first_graph"] = f"/api/graph?raw_file_id={raw_file_ids[0]}&top_n=200"
+        endpoints["first_graph"] = f"/api/graph?raw_file_id={raw_file_ids[0]}&top_n=1000"
         endpoints["rag_status"] = "/api/rag/status"
         endpoints["graphrag_status"] = f"/api/graphrag/status?raw_file_ids={joined}"
     if len(raw_file_ids) >= 2:

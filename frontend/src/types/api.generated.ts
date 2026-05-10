@@ -550,6 +550,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/report/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate Report */
+        post: operations["generate_report_api_report_generate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/workflows/organize": {
         parameters: {
             query?: never;
@@ -785,12 +802,12 @@ export interface components {
             use_llm: boolean;
             /**
              * Max Sections
-             * @default 80
+             * @default 300
              */
             max_sections: number;
             /**
              * Max Nodes Per Section
-             * @default 8
+             * @default 12
              */
             max_nodes_per_section: number;
             /**
@@ -1095,12 +1112,12 @@ export interface components {
             force_rebuild: boolean;
             /**
              * Max Sections
-             * @default 20
+             * @default 200
              */
             max_sections: number;
             /**
              * Max Nodes Per Section
-             * @default 8
+             * @default 12
              */
             max_nodes_per_section: number;
             /**
@@ -1593,12 +1610,12 @@ export interface components {
             build_missing_concept_graph: boolean;
             /**
              * Max Sections
-             * @default 20
+             * @default 200
              */
             max_sections: number;
             /**
              * Max Nodes Per Section
-             * @default 8
+             * @default 12
              */
             max_nodes_per_section: number;
             /**
@@ -1918,6 +1935,48 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** ReportGenerateRequest */
+        ReportGenerateRequest: {
+            /** Raw File Ids */
+            raw_file_ids?: string[];
+            /** Title */
+            title?: string | null;
+            /**
+             * Include Integration
+             * @default true
+             */
+            include_integration: boolean;
+            /**
+             * Include Graph Metrics
+             * @default true
+             */
+            include_graph_metrics: boolean;
+            /**
+             * Include Dataset Metrics
+             * @default true
+             */
+            include_dataset_metrics: boolean;
+        };
+        /** ReportGenerateResponse */
+        ReportGenerateResponse: {
+            /** Id */
+            id: string;
+            /** Raw File Ids */
+            raw_file_ids?: string[];
+            /** Title */
+            title: string;
+            /** Markdown */
+            markdown: string;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at?: string;
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
         /** SampleBookSummary */
         SampleBookSummary: {
             /** Title */
@@ -2009,12 +2068,12 @@ export interface components {
             use_llm: boolean;
             /**
              * Max Sections
-             * @default 120
+             * @default 1000
              */
             max_sections: number;
             /**
              * Max Nodes Per Section
-             * @default 8
+             * @default 12
              */
             max_nodes_per_section: number;
             /**
@@ -4097,6 +4156,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GraphRagQueryResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    generate_report_api_report_generate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportGenerateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportGenerateResponse"];
                 };
             };
             /** @description Bad Request */

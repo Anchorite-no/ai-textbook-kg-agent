@@ -22,9 +22,12 @@ from app.services.llm_client import llm_client
 from app.services.parsed_storage import load_parsed_textbook
 
 
-PROMPT_VERSION = "kg_extract_v3"
-MAX_SECTION_CHARS = 3000
+PROMPT_VERSION = "kg_extract_v4_context_links"
+MAX_SECTION_CHARS = 5000
 LLM_MIN_GROUNDED_NODES = 3
+CONTEXT_HUB_EDGE_LIMIT = 8
+CONTEXT_ADJACENT_EDGE_LIMIT = 10
+CONTEXT_CHUNK_EDGE_LIMIT = 8
 TERM_PATTERN = re.compile(
     r"[\u4e00-\u9fa5A-Za-z0-9]{2,24}?(?:"
     r"电位|传导|细胞|组织|器官|系统|结构|功能|机制|过程|反应|作用|疾病|症状|诊断|治疗|"
@@ -144,6 +147,9 @@ def build_knowledge_graph(request: GraphBuildRequest) -> tuple[GraphResponse, st
     llm_grounded_sections = 0
     fallback_sections = 0
     supplemented_sections = 0
+    context_edge_count = 0
+    skipped_unresolved_edges = 0
+    section_node_ids_by_section: dict[str, list[str]] = {}
 
     for section in sections:
         section_chunks = chunks_by_section.get(section.id) or []
@@ -186,15 +192,22 @@ def build_knowledge_graph(request: GraphBuildRequest) -> tuple[GraphResponse, st
         for draft in node_drafts[: request.max_nodes_per_section]:
             node = _merge_node(parsed, section, draft, node_by_name)
             section_node_ids[_normalize_name(draft.name)] = node.id
+        if section_node_ids:
+            section_node_ids_by_section[section.id] = list(dict.fromkeys(section_node_ids.values()))
 
         for draft in edge_drafts:
-            source_id = section_node_ids.get(_normalize_name(draft.source_name))
-            target_id = section_node_ids.get(_normalize_name(draft.target_name))
+            source_id = section_node_ids.get(_normalize_name(draft.source_name)) or _node_id_for_name(node_by_name, draft.source_name)
+            target_id = section_node_ids.get(_normalize_name(draft.target_name)) or _node_id_for_name(node_by_name, draft.target_name)
             if not source_id or not target_id or source_id == target_id:
+                skipped_unresolved_edges += 1
                 continue
             edge = _build_edge(parsed, draft, source_id, target_id)
-            key = (edge.source_node_id, edge.target_node_id, edge.relation_type)
-            edge_by_key.setdefault(key, edge)
+            if _add_edge(edge_by_key, edge):
+                pass
+
+        context_edge_count += _add_section_context_edges(parsed, section, section_chunks, section_node_ids, node_by_name, edge_by_key)
+
+    context_edge_count += _add_document_context_edges(parsed, sections, chunks_by_section, section_node_ids_by_section, node_by_name, edge_by_key)
 
     nodes = sorted(node_by_name.values(), key=lambda item: (-int(item.metadata.get("frequency", 1)), item.name))
     edges = list(edge_by_key.values())
@@ -208,8 +221,15 @@ def build_knowledge_graph(request: GraphBuildRequest) -> tuple[GraphResponse, st
             "builder": "phase3_minimal_kg_builder",
             "prompt_version": PROMPT_VERSION,
             "section_count": len(sections),
+            "full_section_count": len(parsed.sections),
+            "section_coverage_ratio": round(len(sections) / max(len(parsed.sections), 1), 4),
+            "max_sections_requested": request.max_sections,
+            "max_nodes_per_section": request.max_nodes_per_section,
             "node_count": len(nodes),
             "edge_count": len(edges),
+            "context_edge_count": context_edge_count,
+            "skipped_unresolved_edges": skipped_unresolved_edges,
+            "context_linking_enabled": True,
             "llm_enabled": llm_client.is_enabled() and request.use_llm,
             "llm_cache_hits": llm_cache_hits,
             "llm_calls": llm_calls,
@@ -404,7 +424,7 @@ def _fallback_edges(names: list[str], text: str, chunks: list[Chunk]) -> list[Ed
     if len(names) < 2:
         return edges
     hub = names[0]
-    for name in names[1:4]:
+    for name in names[1 : min(len(names), CONTEXT_HUB_EDGE_LIMIT + 1)]:
         chunk, quote, verified, strategy = _ground_evidence(chunks, _definition_for_term(name, text), name)
         edges.append(
             EdgeDraft(
@@ -466,6 +486,247 @@ def _fallback_edges(names: list[str], text: str, chunks: list[Chunk]) -> list[Ed
             )
         )
     return edges
+
+
+def _add_section_context_edges(
+    parsed: ParsedTextbook,
+    section: Section,
+    chunks: list[Chunk],
+    section_node_ids: dict[str, str],
+    node_by_name: dict[str, KnowledgeNode],
+    edge_by_key: dict[tuple[str, str, KnowledgeRelationType], KnowledgeEdge],
+) -> int:
+    node_ids = list(dict.fromkeys(section_node_ids.values()))
+    if len(node_ids) < 2 or not chunks:
+        return 0
+
+    nodes_by_id = _nodes_by_id(node_by_name)
+    added = 0
+    hub = nodes_by_id.get(node_ids[0])
+    if hub is not None:
+        for target_id in node_ids[1 : CONTEXT_HUB_EDGE_LIMIT + 1]:
+            target = nodes_by_id.get(target_id)
+            if target is None:
+                continue
+            added += _add_context_edge(
+                parsed,
+                edge_by_key,
+                hub,
+                target,
+                chunks,
+                KnowledgeRelationType.contains,
+                f"{section.title} 中将 {target.name} 纳入 {hub.name} 的同章学习上下文。",
+                "context_same_section_hub",
+                0.48,
+                section.id,
+            )
+
+    adjacent_limit = min(len(node_ids) - 1, CONTEXT_ADJACENT_EDGE_LIMIT)
+    for index in range(adjacent_limit):
+        source = nodes_by_id.get(node_ids[index])
+        target = nodes_by_id.get(node_ids[index + 1])
+        if source is None or target is None:
+            continue
+        added += _add_context_edge(
+            parsed,
+            edge_by_key,
+            source,
+            target,
+            chunks,
+            KnowledgeRelationType.parallel_with,
+            f"{source.name} 与 {target.name} 在同一章节中相邻或并列出现，建议联动阅读。",
+            "context_same_section_adjacent",
+            0.46,
+            section.id,
+        )
+
+    chunk_ids = {chunk.id for chunk in chunks}
+    nodes_by_chunk: dict[str, list[str]] = {}
+    for node_id in node_ids:
+        node = nodes_by_id.get(node_id)
+        if node is None:
+            continue
+        for chunk_id in node.evidence_chunk_ids:
+            if chunk_id in chunk_ids:
+                nodes_by_chunk.setdefault(chunk_id, []).append(node_id)
+
+    chunk_added = 0
+    for grouped_ids in nodes_by_chunk.values():
+        unique_ids = list(dict.fromkeys(grouped_ids))
+        if len(unique_ids) < 2:
+            continue
+        for index in range(len(unique_ids) - 1):
+            if chunk_added >= CONTEXT_CHUNK_EDGE_LIMIT:
+                return added
+            source = nodes_by_id.get(unique_ids[index])
+            target = nodes_by_id.get(unique_ids[index + 1])
+            if source is None or target is None:
+                continue
+            delta = _add_context_edge(
+                parsed,
+                edge_by_key,
+                source,
+                target,
+                chunks,
+                KnowledgeRelationType.mentioned_in,
+                f"{source.name} 与 {target.name} 在同一证据片段中共同出现。",
+                "context_same_chunk",
+                0.50,
+                section.id,
+            )
+            added += delta
+            chunk_added += delta
+    return added
+
+
+def _add_document_context_edges(
+    parsed: ParsedTextbook,
+    sections: list[Section],
+    chunks_by_section: dict[str, list[Chunk]],
+    section_node_ids_by_section: dict[str, list[str]],
+    node_by_name: dict[str, KnowledgeNode],
+    edge_by_key: dict[tuple[str, str, KnowledgeRelationType], KnowledgeEdge],
+) -> int:
+    nodes_by_id = _nodes_by_id(node_by_name)
+    added = 0
+    previous_section: Section | None = None
+    previous_hub: KnowledgeNode | None = None
+    for section in sections:
+        node_ids = section_node_ids_by_section.get(section.id) or []
+        if not node_ids:
+            continue
+        hub = nodes_by_id.get(node_ids[0])
+        if hub is None:
+            continue
+        if previous_section is not None and previous_hub is not None and previous_hub.id != hub.id:
+            chunks = chunks_by_section.get(previous_section.id) or chunks_by_section.get(section.id) or []
+            added += _add_context_edge(
+                parsed,
+                edge_by_key,
+                previous_hub,
+                hub,
+                chunks,
+                KnowledgeRelationType.parallel_with,
+                f"{previous_section.title} 与 {section.title} 属于同一教材的相邻结构，两个章节核心概念需要连续阅读。",
+                "context_same_document_adjacent_section",
+                0.38,
+                f"{previous_section.id}->{section.id}",
+            )
+        previous_section = section
+        previous_hub = hub
+    return added
+
+
+def _add_context_edge(
+    parsed: ParsedTextbook,
+    edge_by_key: dict[tuple[str, str, KnowledgeRelationType], KnowledgeEdge],
+    source: KnowledgeNode,
+    target: KnowledgeNode,
+    chunks: list[Chunk],
+    relation_type: KnowledgeRelationType,
+    description: str,
+    evidence_strategy: str,
+    confidence: float,
+    context_ref_id: str,
+) -> int:
+    if source.id == target.id:
+        return 0
+    edge = _build_context_edge(parsed, source, target, chunks, relation_type, description, evidence_strategy, confidence, context_ref_id)
+    if edge is None:
+        return 0
+    return 1 if _add_edge(edge_by_key, edge) else 0
+
+
+def _build_context_edge(
+    parsed: ParsedTextbook,
+    source: KnowledgeNode,
+    target: KnowledgeNode,
+    chunks: list[Chunk],
+    relation_type: KnowledgeRelationType,
+    description: str,
+    evidence_strategy: str,
+    confidence: float,
+    context_ref_id: str,
+) -> KnowledgeEdge | None:
+    chunk, evidence_chunk_ids = _context_chunk(chunks, source, target)
+    if chunk is None:
+        return None
+    quote = _context_quote(chunk.text, source.name, target.name)
+    return KnowledgeEdge(
+        id=stable_id("edge", parsed.raw_file.id, source.id, target.id, relation_type.value, evidence_strategy, context_ref_id, chunk.id),
+        source_node_id=source.id,
+        target_node_id=target.id,
+        relation_type=relation_type,
+        description=description,
+        source_locator=chunk.source_locator,
+        evidence_chunk_ids=evidence_chunk_ids,
+        confidence=confidence,
+        metadata={
+            "source_quote": quote,
+            "source_quote_verified": True,
+            "evidence_strategy": evidence_strategy,
+            "extraction_method": "context_link",
+            "contextual_edge": True,
+            "context_ref_id": context_ref_id,
+            "plan3_relation_type": _plan3_relation_name(relation_type),
+        },
+    )
+
+
+def _context_chunk(chunks: list[Chunk], source: KnowledgeNode, target: KnowledgeNode) -> tuple[Chunk | None, list[str]]:
+    if not chunks:
+        return None, []
+    chunk_by_id = {chunk.id: chunk for chunk in chunks}
+    common_ids = [chunk_id for chunk_id in source.evidence_chunk_ids if chunk_id in target.evidence_chunk_ids and chunk_id in chunk_by_id]
+    if common_ids:
+        return chunk_by_id[common_ids[0]], common_ids[:1]
+    evidence_ids = [
+        chunk_id
+        for chunk_id in [*(source.evidence_chunk_ids[:1]), *(target.evidence_chunk_ids[:1])]
+        if chunk_id in chunk_by_id
+    ]
+    if evidence_ids:
+        return chunk_by_id[evidence_ids[-1]], list(dict.fromkeys(evidence_ids))
+    return chunks[0], [chunks[0].id]
+
+
+def _context_quote(text: str, source_name: str, target_name: str) -> str:
+    sentence = _sentence_with_terms(text, source_name, target_name)
+    if sentence is None:
+        sentence = _sentence_with_terms(text, target_name) or _sentence_with_terms(text, source_name)
+    return _trim_quote(sentence or text)
+
+
+def _add_edge(edge_by_key: dict[tuple[str, str, KnowledgeRelationType], KnowledgeEdge], edge: KnowledgeEdge) -> bool:
+    key = (edge.source_node_id, edge.target_node_id, edge.relation_type)
+    if key in edge_by_key:
+        return False
+    edge_by_key[key] = edge
+    return True
+
+
+def _node_id_for_name(node_by_name: dict[str, KnowledgeNode], name: str) -> str | None:
+    node = node_by_name.get(_normalize_name(name))
+    return node.id if node is not None else None
+
+
+def _nodes_by_id(node_by_name: dict[str, KnowledgeNode]) -> dict[str, KnowledgeNode]:
+    return {node.id: node for node in node_by_name.values()}
+
+
+def _append_metadata_value(metadata: dict[str, Any], key: str, value: str, *, fallback_key: str | None = None) -> list[str]:
+    values: list[str] = []
+    raw = metadata.get(key)
+    if isinstance(raw, list):
+        values.extend(str(item) for item in raw if item)
+    elif raw:
+        values.append(str(raw))
+    if fallback_key:
+        fallback = metadata.get(fallback_key)
+        if fallback:
+            values.append(str(fallback))
+    values.append(value)
+    return list(dict.fromkeys(values))
 
 
 def _merge_node_drafts(primary: list[NodeDraft], fallback: list[NodeDraft], max_nodes: int) -> list[NodeDraft]:
@@ -569,6 +830,9 @@ def _merge_node(parsed: ParsedTextbook, section: Section, draft: NodeDraft, node
         evidence = list(dict.fromkeys([*existing.evidence_chunk_ids, draft.chunk.id]))
         aliases = list(dict.fromkeys([*existing.aliases, *draft.aliases]))
         frequency = int(existing.metadata.get("frequency", 1)) + 1
+        section_ids = _append_metadata_value(existing.metadata, "section_ids", section.id, fallback_key="section_id")
+        chapters = _append_metadata_value(existing.metadata, "chapters", section.title, fallback_key="chapter")
+        chunk_ids = _append_metadata_value(existing.metadata, "chunk_ids", draft.chunk.id)
         updated = existing.model_copy(
             update={
                 "aliases": aliases,
@@ -577,6 +841,9 @@ def _merge_node(parsed: ParsedTextbook, section: Section, draft: NodeDraft, node
                 "metadata": {
                     **existing.metadata,
                     "frequency": frequency,
+                    "section_ids": section_ids,
+                    "chapters": chapters,
+                    "chunk_ids": chunk_ids,
                     "extraction_method": _merge_extraction_method(str(existing.metadata.get("extraction_method", "")), draft.extraction_method),
                 },
             }
@@ -603,6 +870,10 @@ def _merge_node(parsed: ParsedTextbook, section: Section, draft: NodeDraft, node
             "extraction_method": draft.extraction_method,
             "frequency": 1,
             "section_id": section.id,
+            "section_ids": [section.id],
+            "chapters": [section.title],
+            "chunk_ids": [draft.chunk.id],
+            "source_document_id": parsed.raw_file.id,
         },
     )
     node_by_name[key] = node

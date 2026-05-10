@@ -4,13 +4,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, EmptyState } from "@/components/_kit";
 import { cn } from "@/utils/cn";
 import { dialogueApi } from "@/api/dialogue";
+import { useRawFileContext } from "@/hooks/useRawFileContext";
 import type { DialogueMessage } from "@/types/api";
 
 export function DialoguePanel() {
   const queryClient = useQueryClient();
+  const { rawFileIds } = useRawFileContext();
   const { data } = useQuery({
-    queryKey: ["dialogue-history"],
-    queryFn: () => dialogueApi.getHistory(),
+    queryKey: ["dialogue-history", rawFileIds.join(",")],
+    queryFn: () => dialogueApi.getHistory(rawFileIds),
     staleTime: 30_000
   });
 
@@ -33,30 +35,32 @@ export function DialoguePanel() {
 
     const tempUserMsg: DialogueMessage = {
       id: `temp_u_${Date.now()}`,
-      role: "user",
+      role: "teacher",
       content: text,
-      raw_file_ids: [],
+      raw_file_ids: rawFileIds,
       teacher_edit_ids: [],
-      created_by: null,
+      created_by: "teacher",
       created_at: new Date().toISOString(),
       metadata: {}
     };
     setLocalMessages((prev) => [...prev, tempUserMsg]);
 
     try {
-      const res = await dialogueApi.sendMessage({ message: text });
+      const res = await dialogueApi.sendMessage({ message: text, raw_file_ids: rawFileIds, created_by: "teacher", confidence: 1 });
       setLocalMessages((prev) => [
         ...prev.filter((m) => m.id !== tempUserMsg.id),
         res.user_message,
         res.assistant_message
       ]);
       queryClient.invalidateQueries({ queryKey: ["dialogue-history"] });
+      queryClient.invalidateQueries({ queryKey: ["integration"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher-edits"] });
     } catch (err) {
       const errorMsg: DialogueMessage = {
         id: `temp_e_${Date.now()}`,
         role: "assistant",
         content: `发送失败：${err instanceof Error ? err.message : "未知错误"}`,
-        raw_file_ids: [],
+        raw_file_ids: rawFileIds,
         teacher_edit_ids: [],
         created_by: null,
         created_at: new Date().toISOString(),
@@ -113,7 +117,7 @@ export function DialoguePanel() {
 }
 
 function MessageBubble({ message }: { message: DialogueMessage }) {
-  const isUser = message.role === "user";
+  const isUser = message.role === "teacher";
   return (
     <div className={cn("flex gap-2", isUser ? "flex-row-reverse" : "flex-row")}>
       <span

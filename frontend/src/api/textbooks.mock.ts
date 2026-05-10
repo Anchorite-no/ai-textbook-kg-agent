@@ -1,4 +1,4 @@
-import type { TextbookSummary, TextbookUploadResponse, ParsedTextbook } from "@/types/api";
+import type { AsyncTextbookParseResponse, TextbookSummary, TextbookUploadResponse, ParsedTextbook } from "@/types/api";
 
 const fixture: TextbookSummary[] = [
   {
@@ -82,22 +82,97 @@ export async function uploadTextbook(file: File): Promise<TextbookUploadResponse
   };
 }
 
-export async function uploadTextbookAsync(file: File): Promise<{ job_id: string }> {
+export async function uploadTextbookAsync(_file: File): Promise<AsyncTextbookParseResponse> {
   await new Promise((r) => setTimeout(r, 300));
-  return { job_id: `job_mock_${Date.now()}` };
+  return { job: mockJob("textbook_pipeline"), accepted: true, upload_session_id: null };
 }
 
-export async function parseTextbook(rawFileId: string): Promise<ParsedTextbook> {
+export async function parseTextbook(rawFileId: string): Promise<TextbookUploadResponse> {
   await new Promise((r) => setTimeout(r, 1200));
-  throw new Error("Mock parseTextbook not implemented");
+  const parsed = mockParsed(rawFileId);
+  return { job: mockJob("textbook_parse"), raw_file_id: rawFileId, parsed_output_path: `data/parsed/${rawFileId}.json`, parsed_textbook: parsed };
 }
 
-export async function parseTextbookAsync(rawFileId: string): Promise<{ job_id: string }> {
+export async function parseTextbookAsync(_rawFileId: string): Promise<AsyncTextbookParseResponse> {
   await new Promise((r) => setTimeout(r, 300));
-  return { job_id: `job_parse_${Date.now()}` };
+  return { job: mockJob("textbook_pipeline"), accepted: true, upload_session_id: null };
 }
 
 export async function getTextbook(rawFileId: string): Promise<ParsedTextbook> {
   await new Promise((r) => setTimeout(r, 400));
-  throw new Error("Mock getTextbook not implemented");
+  return mockParsed(rawFileId);
+}
+
+function mockJob(jobType: "textbook_pipeline" | "textbook_parse") {
+  return {
+    id: `job_mock_${Date.now()}`,
+    job_type: jobType,
+    status: "completed" as const,
+    progress: 100,
+    message: "mock",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    result: null,
+    error: null,
+    context_path: null,
+    retryable: false,
+    steps: []
+  };
+}
+
+function mockParsed(rawFileId: string): ParsedTextbook {
+  const title = fixture.find((item) => item.raw_file_id === rawFileId)?.title ?? rawFileId;
+  const locator = {
+    raw_file_id: rawFileId,
+    source_path: `mock/${rawFileId}.pdf`,
+    source_type: "converted_textbook",
+    locator_text: `${title} page 1`,
+    page_start: 1,
+    page_end: 1,
+    line_start: null,
+    line_end: null,
+    sheet_name: null,
+    row_start: null,
+    row_end: null,
+    slide_number: null,
+    char_start: null,
+    char_end: null,
+    element_ids: ["elem_mock_1"],
+    quote_hash: "mock"
+  };
+  return {
+    id: `parsed_${rawFileId}`,
+    raw_file: {
+      id: rawFileId,
+      original_filename: `${title}.pdf`,
+      title,
+      format: "pdf",
+      source_type: "converted_textbook",
+      storage_path: `mock/${rawFileId}.pdf`,
+      sha256: rawFileId.replace("raw_", ""),
+      size_bytes: 0,
+      page_count: 1,
+      text_char_count: 80,
+      created_at: new Date().toISOString(),
+      metadata: {}
+    },
+    elements: [],
+    sections: [
+      {
+        id: `sec_${rawFileId}_1`,
+        raw_file_id: rawFileId,
+        title: "第一章 示例章节",
+        section_type: "chapter",
+        level: 1,
+        order_index: 0,
+        parent_section_id: null,
+        element_ids: ["elem_mock_1"],
+        content: "示例章节内容",
+        char_count: 80,
+        source_locator: locator,
+        metadata: {}
+      }
+    ],
+    chunks: []
+  };
 }

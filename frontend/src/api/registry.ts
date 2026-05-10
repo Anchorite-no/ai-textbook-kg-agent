@@ -17,7 +17,7 @@ export const apiMode = {
   integration: pick(import.meta.env.VITE_API_INTEGRATION, "live"),
   rag: pick(import.meta.env.VITE_API_RAG, "live"),
   dialogue: pick(import.meta.env.VITE_API_DIALOGUE, "live"),
-  report: pick(import.meta.env.VITE_API_REPORT, "mock")
+  report: pick(import.meta.env.VITE_API_REPORT, "live")
 } as const;
 
 export type ApiDomain = keyof typeof apiMode;

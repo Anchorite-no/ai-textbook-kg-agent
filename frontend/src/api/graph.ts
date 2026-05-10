@@ -7,7 +7,10 @@ import * as mock from "./graph.mock";
 const impl = apiMode.graph === "live" ? live : mock;
 
 export const graphApi = {
-  fetchGraph: impl.fetchGraph,
+  fetchGraph: (options?: live.FetchGraphOptions) =>
+    apiMode.graph === "live"
+      ? live.fetchGraph(options)
+      : mock.fetchGraph(options?.mode ?? "single"),
   fetchNode: impl.fetchNode,
   buildGraph: impl.buildGraph,
   buildLayeredKG: impl.buildLayeredKG,

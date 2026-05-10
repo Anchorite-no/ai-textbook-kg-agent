@@ -250,7 +250,7 @@ def _sample_book(record: dict[str, Any]) -> SampleBookSummary:
     layered = load_layered_graph(raw_file_id)
     endpoints = {
         "textbook": f"/api/textbooks/{raw_file_id}",
-        "graph": f"/api/graph?raw_file_id={raw_file_id}&top_n=200",
+        "graph": f"/api/graph?raw_file_id={raw_file_id}&top_n=1000",
         "layered_graph": f"/api/kg/layers?raw_file_id={raw_file_id}",
     }
     return SampleBookSummary(

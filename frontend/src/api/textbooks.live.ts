@@ -4,7 +4,8 @@ import type {
   TextbookListResponse,
   TextbookSummary,
   TextbookUploadResponse,
-  ParsedTextbook
+  ParsedTextbook,
+  AsyncTextbookParseResponse
 } from "@/types/api";
 import { request } from "./client";
 
@@ -22,23 +23,23 @@ export async function uploadTextbook(file: File): Promise<TextbookUploadResponse
   });
 }
 
-export async function uploadTextbookAsync(file: File): Promise<{ job_id: string }> {
+export async function uploadTextbookAsync(file: File): Promise<AsyncTextbookParseResponse> {
   const formData = new FormData();
   formData.append("file", file);
-  return request<{ job_id: string }>("/api/textbooks/upload-async", {
+  return request<AsyncTextbookParseResponse>("/api/textbooks/upload-async", {
     method: "POST",
     body: formData
   });
 }
 
-export async function parseTextbook(rawFileId: string): Promise<ParsedTextbook> {
-  return request<ParsedTextbook>(`/api/textbooks/${encodeURIComponent(rawFileId)}/parse`, {
+export async function parseTextbook(rawFileId: string): Promise<TextbookUploadResponse> {
+  return request<TextbookUploadResponse>(`/api/textbooks/${encodeURIComponent(rawFileId)}/parse`, {
     method: "POST"
   });
 }
 
-export async function parseTextbookAsync(rawFileId: string): Promise<{ job_id: string }> {
-  return request<{ job_id: string }>(`/api/textbooks/${encodeURIComponent(rawFileId)}/parse-async`, {
+export async function parseTextbookAsync(rawFileId: string): Promise<AsyncTextbookParseResponse> {
+  return request<AsyncTextbookParseResponse>(`/api/textbooks/${encodeURIComponent(rawFileId)}/parse-async`, {
     method: "POST"
   });
 }

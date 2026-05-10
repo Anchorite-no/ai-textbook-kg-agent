@@ -134,7 +134,7 @@ export function KnowledgeGraph({
       .attr("d", "M0,-4L8,0L0,4")
       .attr("fill", "var(--text-muted)");
 
-    // ---- 绘制边 ----
+    // ---- 绘制边（默认不显示箭头，hover 时才加） ----
     const linkSel = g.selectAll<SVGPathElement, SimLink>(".graph-link")
       .data(simLinks)
       .enter()
@@ -147,8 +147,8 @@ export function KnowledgeGraph({
           .attr("stroke", style.color)
           .attr("stroke-width", style.width)
           .attr("stroke-dasharray", style.dasharray ?? "")
-          .attr("stroke-opacity", 0.7)
-          .attr("marker-end", style.arrow ? "url(#arrow-default)" : "");
+          .attr("stroke-opacity", 0.45)
+          .attr("marker-end", "");
       });
 
     // ---- 绘制节点 ----
@@ -195,23 +195,62 @@ export function KnowledgeGraph({
     nodeSel.append("title")
       .text((d) => `${d.name}（${d.nodeType}，置信度 ${(d.confidence * 100).toFixed(0)}%）`);
 
-    // ---- 高亮辅助 ----
+    // ---- BFS 知识链高亮 ----
+    const MAX_HOPS = 2;
     let highlightedId: string | null = null;
     let draggingId: string | null = null;
 
+    function bfsDepthMap(startId: string, maxDepth: number): Map<string, number> {
+      const depth = new Map<string, number>();
+      depth.set(startId, 0);
+      const queue = [startId];
+      let head = 0;
+      while (head < queue.length) {
+        const cur = queue[head++];
+        const d = depth.get(cur)!;
+        if (d >= maxDepth) continue;
+        for (const neighbor of adjacency.get(cur) ?? []) {
+          if (!depth.has(neighbor)) {
+            depth.set(neighbor, d + 1);
+            queue.push(neighbor);
+          }
+        }
+      }
+      return depth;
+    }
+
     function applyHighlight(nodeId: string) {
       highlightedId = nodeId;
-      const neighbors = adjacency.get(nodeId) || new Set();
+      const depthMap = bfsDepthMap(nodeId, MAX_HOPS);
+      const hopOpacity = [1, 0.7, 0.4];
+
       nodeSel.each(function (n) {
-        d3.select(this).style("opacity", n.id === nodeId || neighbors.has(n.id) ? 1 : 0.15);
+        const hop = depthMap.get(n.id);
+        d3.select(this).style("opacity", hop !== undefined ? hopOpacity[hop] ?? 0.4 : 0.08);
       });
+
       linkSel.each(function (l) {
         const sId = typeof l.source === "object" ? (l.source as SimNode).id : l.source;
         const tId = typeof l.target === "object" ? (l.target as SimNode).id : l.target;
-        d3.select(this).attr("stroke-opacity", sId === nodeId || tId === nodeId ? 0.9 : 0.05);
+        const sHop = depthMap.get(sId);
+        const tHop = depthMap.get(tId);
+        const onChain = sHop !== undefined && tHop !== undefined && Math.abs(sHop - tHop) <= 1;
+        if (onChain) {
+          const maxHop = Math.max(sHop, tHop);
+          const style = getRelationStyle(l.relation as never);
+          d3.select(this)
+            .attr("stroke-opacity", maxHop <= 1 ? 0.9 : 0.5)
+            .attr("marker-end", style.arrow ? "url(#arrow-default)" : "");
+        } else {
+          d3.select(this)
+            .attr("stroke-opacity", 0.03)
+            .attr("marker-end", "");
+        }
       });
+
       nodeSel.select("text").text((n) => {
-        if (n.id === nodeId || neighbors.has(n.id)) return n.name;
+        const hop = depthMap.get(n.id);
+        if (hop !== undefined && hop <= 1) return n.name;
         return n.frequency >= 3 ? n.name : "";
       });
     }
@@ -220,7 +259,9 @@ export function KnowledgeGraph({
       highlightedId = null;
       nodeSel.style("opacity", 1);
       linkSel.each(function () {
-        d3.select(this).attr("stroke-opacity", 0.7);
+        d3.select(this)
+          .attr("stroke-opacity", 0.45)
+          .attr("marker-end", "");
       });
       nodeSel.select("text").text((n) => (n.frequency >= 3 ? n.name : ""));
     }
