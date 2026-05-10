@@ -660,6 +660,7 @@ class ReportGenerateRequest(ContractModel):
     include_integration: bool = True
     include_graph_metrics: bool = True
     include_dataset_metrics: bool = True
+    use_llm: bool = True
 
 
 class ReportGenerateResponse(ContractModel):

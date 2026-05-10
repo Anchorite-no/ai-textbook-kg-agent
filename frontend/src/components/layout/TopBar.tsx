@@ -32,6 +32,9 @@ export function TopBar() {
   const setSelectedTextbookId = useUIStore((s) => s.setSelectedTextbookId);
   const setWorkspaceRawFileIds = useUIStore((s) => s.setWorkspaceRawFileIds);
   const setActiveRightTab = useUIStore((s) => s.setActiveRightTab);
+  const rightHidden = useUIStore((s) => s.rightHidden);
+  const toggleRightHidden = useUIStore((s) => s.toggleRightHidden);
+  const closeNodeDetail = useUIStore((s) => s.closeNodeDetail);
   const requestReportGenerate = useUIStore((s) => s.requestReportGenerate);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -98,7 +101,10 @@ export function TopBar() {
   });
 
   function handleGenerateReport() {
+    if (rightHidden) toggleRightHidden();
+    closeNodeDetail();
     setActiveRightTab("report");
+    toastStore.push({ tone: "info", title: "正在生成报告", description: "后端会优先调用 LLM 生成分析摘要" });
     requestAnimationFrame(() => requestReportGenerate());
   }
 

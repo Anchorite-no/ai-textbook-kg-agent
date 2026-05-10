@@ -302,13 +302,13 @@ export function KnowledgeGraph({
         "link",
         d3.forceLink<SimNode, SimLink>(simLinks)
           .id((d) => d.id)
-          .distance((d) => 120 + (1 - d.weight) * 120)
-          .strength((d) => 0.22 + d.weight * 0.28)
+          .distance((d) => 170 + (1 - d.weight) * 180)
+          .strength((d) => 0.12 + d.weight * 0.18)
       )
-      .force("charge", d3.forceManyBody<SimNode>().strength((d) => -520 - d.radius * 8))
-      .force("x", d3.forceX<SimNode>(centerX).strength(0.025))
-      .force("y", d3.forceY<SimNode>(centerY).strength(0.025))
-      .force("collide", d3.forceCollide<SimNode>().radius((d) => d.radius + 22).iterations(3));
+      .force("charge", d3.forceManyBody<SimNode>().strength((d) => -1100 - d.radius * 22))
+      .force("x", d3.forceX<SimNode>(centerX).strength(0.018))
+      .force("y", d3.forceY<SimNode>(centerY).strength(0.018))
+      .force("collide", d3.forceCollide<SimNode>().radius((d) => d.radius + 38).iterations(4));
 
     simulationRef.current = simulation;
 
@@ -349,7 +349,7 @@ export function KnowledgeGraph({
         const bh = y1 - y0;
         if (bw > 0 && bh > 0) {
           let scale = Math.min(curSize.width / bw, curSize.height / bh) * 0.85;
-          scale = Math.max(scale, 1.0);
+          scale = Math.max(scale, 0.72);
           scale = Math.min(scale, 2.5);
           const tx = curSize.width / 2 - ((x0 + x1) / 2) * scale;
           const ty = curSize.height / 2 - ((y0 + y1) / 2) * scale;
@@ -404,7 +404,7 @@ export function KnowledgeGraph({
       const bh = y1 - y0;
       if (bw > 0 && bh > 0) {
         let s = Math.min(curSize.width / bw, curSize.height / bh) * 0.85;
-        s = Math.max(s, 1.0);
+        s = Math.max(s, 0.72);
         s = Math.min(s, 2.5);
         const tx = curSize.width / 2 - ((x0 + x1) / 2) * s;
         const ty = curSize.height / 2 - ((y0 + y1) / 2) * s;

@@ -5644,6 +5644,11 @@
             "type": "boolean",
             "title": "Include Dataset Metrics",
             "default": true
+          },
+          "use_llm": {
+            "type": "boolean",
+            "title": "Use Llm",
+            "default": true
           }
         },
         "additionalProperties": false,

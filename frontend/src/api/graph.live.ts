@@ -26,7 +26,7 @@ export async function fetchGraph(options: FetchGraphOptions = {}): Promise<Graph
       query: {
         mode: "single",
         raw_file_id: ids[0],
-        top_n: options.topN ?? 300
+        top_n: options.topN ?? 220
       }
     });
     const nodes = data.nodes ?? [];
@@ -43,7 +43,7 @@ export async function fetchGraph(options: FetchGraphOptions = {}): Promise<Graph
     };
   }
 
-  const perGraphTopN = Math.max(30, Math.ceil((options.topN ?? 300) / Math.max(ids.length, 1)));
+  const perGraphTopN = Math.max(30, Math.ceil((options.topN ?? 220) / Math.max(ids.length, 1)));
   const graphs = await Promise.all(
     ids.map((id) =>
       request<GraphResponse>("/api/graph", {
@@ -73,9 +73,9 @@ export async function buildGraph(textbookIds: string[]): Promise<{ job_id: strin
   if (textbookIds.length === 0) throw new Error("No textbook IDs provided");
   const body: GraphBuildRequest = {
     raw_file_id: textbookIds[0],
-    force_rebuild: false,
-    max_sections: 300,
-    max_nodes_per_section: 12,
+    force_rebuild: true,
+    max_sections: 80,
+    max_nodes_per_section: 8,
     use_llm: true
   };
   const res = await request<{ job: { id: string } }>("/api/graph/build", {

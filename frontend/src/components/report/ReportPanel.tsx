@@ -48,10 +48,16 @@ export function ReportPanel() {
         title: `${dataset?.title ?? "当前教材集合"}整合报告`,
         include_dataset_metrics: true,
         include_graph_metrics: true,
-        include_integration: true
+        include_integration: true,
+        use_llm: true
       });
       setReport(generated.markdown);
-      toastStore.push({ tone: "success", title: "报告已生成", description: "内容来自后端真实教材、索引和整合结果" });
+      const llm = generated.metadata?.llm as { used?: boolean } | undefined;
+      toastStore.push({
+        tone: "success",
+        title: "报告已生成",
+        description: llm?.used ? "已加入 LLM 分析摘要" : "已生成真实数据报告，LLM 不可用时使用规则兜底"
+      });
     } catch {
       const next = buildReport({
         datasetTitle: dataset?.title ?? "当前教材集合",

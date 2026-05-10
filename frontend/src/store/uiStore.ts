@@ -18,7 +18,7 @@ const LEFT_COLLAPSED = 56;
 const RIGHT_DEFAULT = 420;
 const RIGHT_MIN = 360;
 const RIGHT_MAX = 560;
-const GRAPH_TOP_N_DEFAULT = 300;
+const GRAPH_TOP_N_DEFAULT = 220;
 
 export const layoutLimits = {
   leftDefault: LEFT_DEFAULT,
@@ -113,7 +113,7 @@ export const useUIStore = create<UIState>()(
         set({ theme });
       },
       setGraphMode: (graphMode) => set({ graphMode }),
-      setGraphTopN: (graphTopN) => set({ graphTopN: clamp(graphTopN, 50, 500) }),
+      setGraphTopN: (graphTopN) => set({ graphTopN: clamp(graphTopN, 50, 420) }),
       setWorkflowUseLLM: (workflowUseLLM) => set({ workflowUseLLM }),
       setSelectedTextbookId: (selectedTextbookId) => set({ selectedTextbookId }),
       setSelectedNodeId: (selectedNodeId) =>
@@ -141,7 +141,7 @@ export const useUIStore = create<UIState>()(
         graphTopN: state.graphTopN,
         workflowUseLLM: state.workflowUseLLM
       }),
-      version: 3,
+      version: 4,
       onRehydrateStorage: () => (state) => {
         if (state?.theme) {
           document.documentElement.setAttribute("data-theme", state.theme);

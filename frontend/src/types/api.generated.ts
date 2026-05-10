@@ -1956,6 +1956,11 @@ export interface components {
              * @default true
              */
             include_dataset_metrics: boolean;
+            /**
+             * Use Llm
+             * @default true
+             */
+            use_llm: boolean;
         };
         /** ReportGenerateResponse */
         ReportGenerateResponse: {

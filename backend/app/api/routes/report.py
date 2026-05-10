@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from typing import Any
 
@@ -10,6 +11,7 @@ from app.services.converted_textbook_importer import stable_id
 from app.services.graph_storage import load_graph
 from app.services.graphrag_query import get_graphrag_status
 from app.services.integration_storage import load_integration
+from app.services.llm_client import llm_client
 from app.services.parsed_storage import list_parsed_textbooks
 from app.services.rag_index import get_rag_index_status
 from app.services.sample_dataset import get_seven_books_dataset
@@ -30,6 +32,16 @@ def generate_report(payload: ReportGenerateRequest) -> ReportGenerateResponse:
     integration = load_integration(raw_file_ids) if payload.include_integration and len(raw_file_ids) >= 2 else None
     title = payload.title or dataset.title or "教材知识整合报告"
     generated_at = datetime.utcnow()
+    llm_sections, llm_metadata = _build_llm_sections(
+        title=title,
+        raw_file_ids=raw_file_ids,
+        summaries=summaries,
+        graph_metrics=graph_metrics,
+        rag_status=rag_status.model_dump(mode="json"),
+        graphrag_status=graphrag_status.model_dump(mode="json"),
+        integration=integration.model_dump(mode="json") if integration else None,
+        enabled=payload.use_llm,
+    )
 
     markdown = _build_markdown(
         title=title,
@@ -40,6 +52,7 @@ def generate_report(payload: ReportGenerateRequest) -> ReportGenerateResponse:
         rag_status=rag_status.model_dump(mode="json"),
         graphrag_status=graphrag_status.model_dump(mode="json"),
         integration=integration.model_dump(mode="json") if integration else None,
+        llm_sections=llm_sections,
     )
     return ReportGenerateResponse(
         id=stable_id("report", "|".join(raw_file_ids), generated_at.isoformat()),
@@ -54,6 +67,7 @@ def generate_report(payload: ReportGenerateRequest) -> ReportGenerateResponse:
             "rag_status": rag_status.status,
             "graphrag_status": graphrag_status.status,
             "integration_ready": integration is not None,
+            "llm": llm_metadata,
         },
     )
 
@@ -113,6 +127,7 @@ def _build_markdown(
     rag_status: dict[str, object],
     graphrag_status: dict[str, object],
     integration: dict[str, object] | None,
+    llm_sections: list[str],
 ) -> str:
     stats = integration.get("compression_stats") if integration else None
     decisions = integration.get("decisions") if integration else []
@@ -160,6 +175,8 @@ def _build_markdown(
             "说明：上下文弱链接来自同章节、同 chunk、相邻章节关系，用于降低零散节点并辅助教师浏览；此类边在 metadata 中标记为 contextual_edge。",
         ]
     )
+    if llm_sections:
+        lines.extend(["", *llm_sections])
     lines.extend(["", "## 整合压缩", ""])
     if isinstance(stats, dict):
         lines.extend(
@@ -196,3 +213,117 @@ def _build_markdown(
         ]
     )
     return "\n".join(lines)
+
+
+def _build_llm_sections(
+    *,
+    title: str,
+    raw_file_ids: list[str],
+    summaries: list[object],
+    graph_metrics: dict[str, Any],
+    rag_status: dict[str, object],
+    graphrag_status: dict[str, object],
+    integration: dict[str, object] | None,
+    enabled: bool,
+) -> tuple[list[str], dict[str, Any]]:
+    metadata: dict[str, Any] = {
+        "requested": enabled,
+        "enabled": llm_client.is_enabled(),
+        "used": False,
+    }
+    if not enabled or not llm_client.is_enabled():
+        return [], metadata
+
+    stats = integration.get("compression_stats") if integration else None
+    decisions = integration.get("decisions") if integration else []
+    decisions = decisions if isinstance(decisions, list) else []
+    facts = {
+        "title": title,
+        "book_count": len(raw_file_ids),
+        "books": [
+            {
+                "title": getattr(item, "title", ""),
+                "sections": getattr(item, "section_count", 0),
+                "chunks": getattr(item, "chunk_count", 0),
+            }
+            for item in summaries[:12]
+        ],
+        "graph": {
+            "node_count": graph_metrics.get("node_count", 0),
+            "edge_count": graph_metrics.get("edge_count", 0),
+            "orphan_ratio": graph_metrics.get("orphan_ratio", 0),
+            "context_edge_count": graph_metrics.get("context_edge_count", 0),
+            "books": graph_metrics.get("books", [])[:12],
+        },
+        "rag": rag_status,
+        "graphrag": graphrag_status,
+        "integration_stats": stats if isinstance(stats, dict) else None,
+        "decision_samples": [
+            {
+                "action": item.get("action"),
+                "reason": item.get("reason"),
+                "confidence": item.get("confidence"),
+            }
+            for item in decisions[:10]
+            if isinstance(item, dict)
+        ],
+    }
+    prompt = (
+        "你是学科教材知识图谱与教学整合评审助手。请只基于给定事实生成 JSON，不要编造不存在的数据。"
+        "输出字段必须是：summary(string), single_book_focus(list[string]), graph_cleanup(list[string]), "
+        "teaching_integrity(string), risks(list[string]), next_steps(list[string])。"
+        "要求：中文，短句，面向黑客松评委；重点说明单本书图谱如何精简但保留合理链接，"
+        "以及跨教材整合是否仍能保持教学完整性。每个列表最多 4 条。"
+        f"\n事实数据：{json.dumps(facts, ensure_ascii=False)}"
+    )
+    try:
+        payload = llm_client.extract_json(prompt) or {}
+    except Exception as exc:  # noqa: BLE001 - report generation must keep deterministic fallback.
+        metadata["error"] = str(exc)
+        return [], metadata
+
+    metadata["used"] = True
+    metadata["model"] = "configured"
+    lines = [
+        "## LLM 分析摘要",
+        "",
+        _as_text(payload.get("summary"), "LLM 已基于当前图谱、RAG 和整合指标生成分析。"),
+        "",
+        "### 单本书图谱精简建议",
+        "",
+        *_as_bullets(payload.get("single_book_focus")),
+        "",
+        "### 链接与可视化整理",
+        "",
+        *_as_bullets(payload.get("graph_cleanup")),
+        "",
+        "### 教学完整性判断",
+        "",
+        _as_text(payload.get("teaching_integrity"), "当前证据链保留 source_locator，可继续通过教师反馈修正整合决策。"),
+        "",
+        "### 风险与下一步",
+        "",
+        *_as_bullets([*_as_list(payload.get("risks")), *_as_list(payload.get("next_steps"))][:6]),
+    ]
+    return lines, metadata
+
+
+def _as_text(value: object, fallback: str) -> str:
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    return fallback
+
+
+def _as_list(value: object) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, str) and value.strip():
+        return [value.strip()]
+    return []
+
+
+def _as_bullets(value: object) -> list[str]:
+    items = _as_list(value)
+    if not items:
+        return ["- 暂无额外建议。"]
+    return [f"- {item}" for item in items[:4]]

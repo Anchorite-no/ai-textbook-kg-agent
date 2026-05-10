@@ -99,9 +99,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 <input
                   type="number"
                   min={50}
-                  max={500}
+                  max={420}
                   value={graphTopN}
-                  onChange={(e) => setGraphTopN(Number(e.target.value) || 300)}
+                  onChange={(e) => setGraphTopN(Number(e.target.value) || 220)}
                   className="w-24 h-7 px-2 rounded-control border border-border-soft bg-surface-card text-meta text-text-default"
                 />
               </label>
